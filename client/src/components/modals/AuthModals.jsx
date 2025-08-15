@@ -1,6 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import api from "/axios.js";
 
 const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
+  const [error, setError] = useState("");
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e) => {
@@ -84,13 +86,113 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
             const form = e.currentTarget;
             const username = form.querySelector('input[name="username"]').value;
             const password = form.querySelector('input[name="password"]').value;
-            if (username === "username" && password === "password") {
-              // redirect to job lists
-              localStorage.setItem("authUser", JSON.stringify({ username }));
-              window.location.href = "/jobs";
+            setError("");
+            if (isSignin) {
+              api
+                .post("/auth/signin", { username, password })
+                .then((res) => {
+                  console.log(res);
+                  const user = res.data?.user;
+                  if (user) {
+                    localStorage.setItem("authUser", JSON.stringify(user));
+                    if (user.isFirstVisit) {
+                      window.location.href = "/onboarding";
+                    } else {
+                      window.location.href = "/jobs";
+                    }
+                  }
+                })
+                .catch((err) => {
+                  const msg =
+                    err?.response?.data?.error || "Login failed" + err;
+                  setError(msg);
+                });
+            } else {
+              const firstName = form.querySelector(
+                'input[name="firstName"]'
+              ).value;
+              const lastName = form.querySelector(
+                'input[name="lastName"]'
+              ).value;
+              const email = form.querySelector('input[name="email"]').value;
+              const confirmPassword = form.querySelector(
+                'input[name="confirmPassword"]'
+              ).value;
+              if (password !== confirmPassword) {
+                setError("Passwords do not match");
+                return;
+              }
+              api
+                .post("/user/create", {
+                  firstName,
+                  lastName,
+                  email,
+                  username,
+                  password,
+                })
+                .then((res) => {
+                  const user = res.data?.user;
+                  if (user) {
+                    localStorage.setItem("authUser", JSON.stringify(user));
+                    window.location.href = "/onboarding";
+                  }
+                })
+                .catch((err) => {
+                  const msg =
+                    err?.response?.data?.error || "Sign up failed" + err;
+                  setError(msg);
+                });
             }
           }}
         >
+          {!isSignin && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block font-roboto text-sm text-brand-bee">
+                  First name<span className="text-brand-honey"> *</span>
+                </label>
+                <input
+                  name="firstName"
+                  type="text"
+                  placeholder="Type your first name"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block font-roboto text-sm text-brand-bee">
+                  Last name<span className="text-brand-honey"> *</span>
+                </label>
+                <input
+                  name="lastName"
+                  type="text"
+                  placeholder="Type your last name"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="mb-1 block font-roboto text-sm text-brand-bee">
+                  Email<span className="text-brand-honey"> *</span>
+                </label>
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block font-roboto text-sm text-brand-bee">
+                  Confirm password<span className="text-brand-honey"> *</span>
+                </label>
+                <input
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Re-type your password"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+                />
+              </div>
+            </div>
+          )}
           <div>
             <label className="mb-1 block font-roboto text-sm text-brand-bee">
               Username<span className="text-brand-honey"> *</span>
@@ -129,6 +231,12 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
           >
             {isSignin ? "Sign in" : "Create account"}
           </button>
+
+          {error && (
+            <p className="font-roboto text-center text-sm text-red-600">
+              {error}
+            </p>
+          )}
 
           <p className="font-roboto mt-2 text-center text-sm text-slate-600 pt-8">
             {switchPrompt.text}{" "}

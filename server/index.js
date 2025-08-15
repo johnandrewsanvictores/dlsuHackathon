@@ -1,20 +1,20 @@
-import express from 'express';
-import session from 'express-session';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import passport from './controllers/authController.js';
+import express from "express";
+import session from "express-session";
+import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import passport from "./controllers/authController.js";
 
-import authRoutes from './routes/authRoute.js';
-import userRoutes from './routes/userRoute.js';
-import resumeRoutes from './routes/resumeRoute.js';
-import jobInfoRoutes from  './routes/jobInfoRoute.js';
-import connectDbB from './config/db.js';
+import authRoutes from "./routes/authRoute.js";
+import userRoutes from "./routes/userRoute.js";
+import resumeRoutes from "./routes/resumeRoute.js";
+import jobInfoRoutes from "./routes/jobInfoRoute.js";
+import connectDbB from "./config/db.js";
 
-import path from 'path';
-import { fileURLToPath } from 'url';
-import multer from 'multer';
-import {scrapeOnlineJobs} from "./scraper-onlinejobs.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import multer from "multer";
+import { scrapeOnlineJobs } from "./scraper-onlinejobs.js";
 import jobsInfo from "./models/jobsInfoModel.js";
 import jobInfoRoute from "./routes/jobInfoRoute.js";
 
@@ -29,29 +29,30 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors({
-    origin: [
-        process.env.FRONTEND_BASE_URL,
-        'https://accounts.google.com'
-    ],
+app.use(
+  cors({
+    origin: [process.env.FRONTEND_BASE_URL, "https://accounts.google.com"],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-}));
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 
 // Session configuration
-app.use(session({
+app.use(
+  session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-        domain: process.env.COOKIE_DOMAIN,
-        maxAge: 1000 * 60 * 60 // 1 hour
-    }
-}));
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      domain: process.env.COOKIE_DOMAIN,
+      maxAge: 1000 * 60 * 60, // 1 hour
+    },
+  })
+);
 
 // Passport setup
 app.use(passport.initialize());
@@ -60,13 +61,9 @@ app.use(passport.session());
 // Routes
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const upload = multer({ dest: path.join(__dirname, 'uploads') });
+const upload = multer({ dest: path.join(__dirname, "uploads") });
 
-
-
-
-const jobs = [
-];
+const jobs = [];
 
 // Insert all 50 jobs
 // jobsInfo.insertMany(jobs)
@@ -79,15 +76,12 @@ const jobs = [
 //         mongoose.connection.close();
 //     });
 
-app.use('/auth', authRoutes);
-app.use('/user', userRoutes);
-app.use('/resume', resumeRoutes);
-app.use('/jobs', jobInfoRoutes);
-
-
-
+app.use("/auth", authRoutes);
+app.use("/user", userRoutes);
+app.use("/resume", resumeRoutes);
+app.use("/jobs", jobInfoRoutes);
 
 // Start server
 app.listen(3000, () => {
-    console.log('Server started on http://localhost:3000');
+  console.log("Server started on http://localhost:3000");
 });

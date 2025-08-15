@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthModal from "../modals/AuthModals";
+import api from "/axios.js";
 
 const Navbar = () => {
   const [authMode, setAuthMode] = useState(null);
@@ -35,7 +36,10 @@ const Navbar = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [showLogoutConfirm]);
 
-  const handleConfirmLogout = () => {
+  const handleConfirmLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (_) {}
     localStorage.removeItem("authUser");
     setUser(null);
     setOpenMenu(false);
