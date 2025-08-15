@@ -7,7 +7,6 @@ import passport from './controllers/authController.js';
 
 import authRoutes from './routes/authRoute.js';
 import userRoutes from './routes/userRoute.js';
-
 import connectDbB from './config/db.js';
 
 import path from 'path';

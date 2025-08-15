@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 
 const myJobsSchema = new mongoose.Schema({
-  userID: { type: mongoose.Schema.Types.ObjectId, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, required: true },
   jobInfoId: { type: mongoose.Schema.Types.ObjectId},
-  status: { 
+  applicationStatus: { 
     type: String,
     enum: ["applied", "readyToInterview", "rejected", "hired"],
-    required: true
+    required: true,
+    default: "applied"
   },
   interviewDate: { type: Date}
 }, { timestamps: true });
