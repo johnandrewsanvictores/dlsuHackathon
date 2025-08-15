@@ -61,22 +61,22 @@ const About = () => {
 
   const timeline = [
     {
-      year: "2025",
+      year: "2023",
       title: "Work Hive Founded",
       description: "Started with a simple mission: make job searching organized and stress-free."
     },
     {
-      year: "2025",
+      year: "2024",
       title: "AI Job Matching Launched",
       description: "Introduced intelligent resume analysis and job matching algorithms."
     },
     {
-      year: "2025",
+      year: "2024",
       title: "Mobile App Released",
       description: "Launched iOS and Android apps for job searching on the go."
     },
     {
-      year: "2025",
+      year: "2024",
       title: "Enterprise Features",
       description: "Added team collaboration and advanced analytics for career coaches."
     }
@@ -194,8 +194,38 @@ const About = () => {
         </div>
       </section>
 
-      {/* Timeline Section */}
+      {/* Team Section */}
       <section className="bg-slate-50 py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-poppins text-3xl font-bold text-slate-900 mb-4">
+              Meet Our Team
+            </h2>
+            <p className="font-roboto text-lg text-slate-600">
+              The passionate people behind Work Hive
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {teamMembers.map((member, index) => (
+              <div key={index} className="bg-white rounded-lg p-6 shadow-sm text-center">
+                <div className="text-4xl mb-4">{member.avatar}</div>
+                <h3 className="font-poppins text-lg font-semibold text-slate-900 mb-1">
+                  {member.name}
+                </h3>
+                <p className="font-roboto text-sm text-brand-honey mb-3">
+                  {member.role}
+                </p>
+                <p className="font-roboto text-sm text-slate-600">
+                  {member.bio}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Timeline Section */}
+      <section className="py-16">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
             <h2 className="font-poppins text-3xl font-bold text-slate-900 mb-4">
