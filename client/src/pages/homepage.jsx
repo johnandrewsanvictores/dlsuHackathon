@@ -249,7 +249,92 @@ const Homepage = () => {
           </a>
         </div>
       </section>
-      <Footer />
+
+      <footer className="bg-white py-12">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 md:grid-cols-3">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2">
+              <div
+                className="rounded-xl p-2.5"
+                style={{ background: "#FFC93C" }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  strokeWidth="2"
+                  stroke="white"
+                  className="h-5 w-5"
+                >
+                  <path d="M6 7h12a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z" />
+                  <path d="M9 7V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v1" />
+                </svg>
+              </div>
+              <span className="font-poppins text-lg font-semibold text-slate-900">
+                JobSeeker
+              </span>
+            </div>
+            <p className="font-roboto max-w-md text-sm text-slate-600">
+              Organize your career journey with our comprehensive job tracking
+              platform. From application to offer, we help you stay in control.
+            </p>
+            <div className="mt-4 flex gap-3 text-slate-500">
+              <span>🐦</span>
+              <span>💼</span>
+              <span>💬</span>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-poppins text-sm font-semibold text-slate-900">
+              Company
+            </h4>
+            <ul className="font-roboto mt-3 space-y-2 text-sm text-slate-600">
+              <li>
+                <a href="/about" className="hover:text-slate-900">
+                  About
+                </a>
+              </li>
+              <li>
+                <a href="/billing" className="hover:text-slate-900">
+                  Billing
+                </a>
+              </li>
+              <li>
+                <a href="#contact" className="hover:text-slate-900">
+                  Contact
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-poppins text-sm font-semibold text-slate-900">
+              Legal
+            </h4>
+            <ul className="font-roboto mt-3 space-y-2 text-sm text-slate-600">
+              <li>
+                <a href="#privacy" className="hover:text-slate-900">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="#terms" className="hover:text-slate-900">
+                  Terms of Service
+                </a>
+              </li>
+              <li>
+                <a href="#cookie" className="hover:text-slate-900">
+                  Cookie Policy
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="mx-auto mt-10 max-w-6xl px-4">
+          <div className="border-t pt-6 text-center text-sm text-slate-500">
+            © {new Date().getFullYear()} JobSeeker. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
