@@ -1,31 +1,6 @@
 import React, { useEffect } from "react";
 
-const GoogleIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 48 48"
-    className="h-5 w-5"
-  >
-    <path
-      fill="#FFC107"
-      d="M43.611 20.083H42V20H24v8h11.303C33.602 31.91 29.28 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.156 7.961 3.039l5.657-5.657C34.869 5.053 29.706 3 24 3 12.955 3 4 11.955 4 23s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z"
-    />
-    <path
-      fill="#FF3D00"
-      d="M6.306 14.691l6.571 4.818C14.35 16.104 18.822 13 24 13c3.059 0 5.842 1.156 7.961 3.039l5.657-5.657C34.869 5.053 29.706 3 24 3 16.318 3 9.656 7.337 6.306 14.691z"
-    />
-    <path
-      fill="#4CAF50"
-      d="M24 43c5.207 0 9.899-1.993 13.432-5.243l-6.199-5.238C29.206 34.859 26.76 36 24 36c-5.246 0-9.545-3.34-11.141-7.988l-6.553 5.047C9.616 38.556 16.227 43 24 43z"
-    />
-    <path
-      fill="#1976D2"
-      d="M43.611 20.083H42V20H24v8h11.303c-1.084 3.085-3.311 5.508-6.07 7.019.002-.001 6.199 5.238 6.199 5.238l.428.031C39.701 36.689 44 30.591 44 23c0-1.341-.138-2.651-.389-3.917z"
-    />
-  </svg>
-);
-
-const AuthModal = ({ isOpen, mode, onClose }) => {
+const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e) => {
@@ -38,8 +13,14 @@ const AuthModal = ({ isOpen, mode, onClose }) => {
   if (!isOpen) return null;
 
   const isSignin = mode === "signin";
-  const title = isSignin ? "Sign In" : "Sign Up";
-  const cta = isSignin ? "Sign in with Google" : "Sign up with Google";
+  const heading = isSignin ? "Welcome back!" : "Create your account";
+  const switchPrompt = isSignin
+    ? { text: "Don't have an account?", linkText: "Sign up", href: "#signup" }
+    : {
+        text: "Already have an account?",
+        linkText: "Sign in",
+        href: "#signin",
+      };
 
   return (
     <div
@@ -53,14 +34,11 @@ const AuthModal = ({ isOpen, mode, onClose }) => {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-start justify-between">
-          <h3 className="font-poppins text-2xl font-semibold text-slate-900">
-            {title}
-          </h3>
+      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
+        <div className="relative mb-6">
           <button
             onClick={onClose}
-            className="rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="absolute right-0 top-0 rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
             aria-label="Close"
           >
             <svg
@@ -74,23 +52,100 @@ const AuthModal = ({ isOpen, mode, onClose }) => {
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+
+          <div className="flex items-center justify-center gap-3">
+            <div className="rounded-lg bg-brand-honey p-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                strokeWidth="2"
+                stroke="white"
+                className="h-5 w-5"
+              >
+                <path d="M6 7h12a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z" />
+                <path d="M9 7V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v1" />
+              </svg>
+            </div>
+            <span className="font-poppins text-2xl font-bold text-brand-bee">
+              Work <span className="text-brand-honey">Hive</span>
+            </span>
+          </div>
         </div>
 
-        <p className="font-roboto mb-6 text-slate-600">
-          {isSignin
-            ? "Welcome back! Continue with your account."
-            : "Create your account to get started."}
-        </p>
+        <h2 className="font-poppins text-3xl font-extrabold leading-tight text-brand-bee text-center">
+          {heading}
+        </h2>
 
-        <button
-          className="font-roboto flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50"
-          onClick={() => {
-            // Hook up Google OAuth here
+        <form
+          className="mt-6 space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const username = form.querySelector('input[name="username"]').value;
+            const password = form.querySelector('input[name="password"]').value;
+            if (username === "username" && password === "password") {
+              // redirect to job lists
+              localStorage.setItem("authUser", JSON.stringify({ username }));
+              window.location.href = "/jobs";
+            }
           }}
         >
-          <GoogleIcon />
-          {cta}
-        </button>
+          <div>
+            <label className="mb-1 block font-roboto text-sm text-brand-bee">
+              Username<span className="text-brand-honey"> *</span>
+            </label>
+            <input
+              name="username"
+              type="text"
+              placeholder="Type your username"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block font-roboto text-sm text-brand-bee">
+              Password<span className="text-brand-honey"> *</span>
+            </label>
+            <input
+              name="password"
+              type="password"
+              placeholder="Type your password"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+            />
+            <div className="mt-2 text-right">
+              <a
+                href="#forgot"
+                className="font-roboto text-xs text-slate-500 hover:text-brand-bee"
+              >
+                Forgot Password?
+              </a>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full rounded-lg bg-brand-honey px-4 py-3 font-roboto text-sm font-medium text-brand-bee transition-colors hover:bg-brand-honey-600"
+          >
+            {isSignin ? "Sign in" : "Create account"}
+          </button>
+
+          <p className="font-roboto mt-2 text-center text-sm text-slate-600 pt-8">
+            {switchPrompt.text}{" "}
+            <a
+              href={switchPrompt.href}
+              className="text-brand-honey hover:underline"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onSwitchMode) {
+                  onSwitchMode(isSignin ? "signup" : "signin");
+                }
+              }}
+            >
+              {switchPrompt.linkText}
+            </a>
+          </p>
+        </form>
       </div>
     </div>
   );
