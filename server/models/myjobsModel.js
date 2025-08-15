@@ -5,7 +5,7 @@ const myJobsSchema = new mongoose.Schema({
   jobInFold: { type: mongoose.Schema.Types.ObjectId},
   status: { 
     type: String,
-    enum: ["applied", "readyToInterview", "rejected", "hired"],
+    enum: ["applied", "readyForInterview", "rejected", "hired"],
     required: true
   },
   interviewDate: { type: Date}
