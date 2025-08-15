@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import User from "../models/userModel.js";
 import axios from "../config/axios.js";
+import {getJobs} from "./jobInfoController.js";
+import Fuse from 'fuse.js';
 
 async function getSkills(parsedText) {
     const prompt = `
@@ -15,7 +17,7 @@ async function getSkills(parsedText) {
 
     const pollRes = await axios.get(pollinationsURL);
 
-    console.log(pollRes);
+    return pollRes;
 }
 
 export const getResumeContext = async (req, res) => {
@@ -40,7 +42,7 @@ export const getResumeContext = async (req, res) => {
         await fs.unlink(req.file.path);
 
         const _id = req.user.userId;
-        console.log(_id);
+
         const addResumeContext = await User.findByIdAndUpdate(
             _id,
             { $set: {resumeContext: text} },
@@ -51,5 +53,71 @@ export const getResumeContext = async (req, res) => {
     } catch (err) {
         console.error('🔥 PDF PARSE ERROR:', err);
         res.status(500).json({ error: 'Failed to parse PDF' });
+    }
+}
+
+
+export const filterListingByResume = async (req, res) => {
+    try {
+
+        const data = await getJobs({limit: 100});
+
+        if(data.success == false) {
+            return res.status(500).json({ error: 'Failed to parse PDF' });
+        }
+
+        var jobs = data.jobInfos;
+
+        const resumeContext = await User.findOne({
+            _id: req.user.userId
+        }).select('resumeContext -_id');
+
+        if(!resumeContext) {
+            return res.status(400).json({ error: 'Resume not found' });
+        }
+
+        const resumeSkillsData = await getSkills(resumeContext);
+        const resumeSkillsString = resumeSkillsData.data?.hardSkills || '';
+        const resumeSkills = resumeSkillsString.split(',').map(skill => skill.trim());
+
+        // Preprocess text helper
+        const preprocessText = (text) => text.toLowerCase().replace(/[^\w\s]/gi, '');
+
+        // Fuse.js instance
+        const fuse = new Fuse(resumeSkills, {
+            includeScore: true,
+            threshold: 0.5 // adjust fuzziness
+        });
+
+        // Function to match one job
+        const matchJobSkills = async (job) => {
+            const jobText = preprocessText(job.shortDescription);
+
+            const matchedSkills = resumeSkills.filter(skill =>
+                fuse.search(jobText).some(result => result.item === skill)
+            );
+
+            const score = (matchedSkills.length / resumeSkills.length) * 100;
+
+            return score > 0 ? { job, score, matchedSkills } : null;
+        };
+
+        jobs = [
+            {
+                shortDescription: "This is reactjs"
+            },
+            {
+                shortDescription: "This is node js"
+            }
+        ]
+        // Process all jobs in parallel
+        const results = await Promise.all(jobs.map(matchJobSkills));
+        const filteredJobs = results
+            .filter(r => r !== null)
+            .sort((a, b) => b.score - a.score); // highest match first
+
+        return res.status(200).json({ filteredJobs });
+    }catch (err) {
+        res.status(500).json({ error: 'Server error' + err});
     }
 }
