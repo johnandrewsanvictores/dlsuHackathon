@@ -6,6 +6,7 @@ const Navbar = () => {
   const [authMode, setAuthMode] = useState(null);
   const [user, setUser] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,6 +25,23 @@ const Navbar = () => {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  useEffect(() => {
+    if (!showLogoutConfirm) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setShowLogoutConfirm(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showLogoutConfirm]);
+
+  const handleConfirmLogout = () => {
+    localStorage.removeItem("authUser");
+    setUser(null);
+    setOpenMenu(false);
+    setShowLogoutConfirm(false);
+    navigate("/");
+  };
   return (
     <nav className="w-full border-b bg-white">
       <div className="mx-auto max-w-7xl px-4">
@@ -167,6 +185,15 @@ const Navbar = () => {
                     >
                       Profile
                     </button>
+                    <button
+                      onClick={() => {
+                        setOpenMenu(false);
+                        setShowLogoutConfirm(true);
+                      }}
+                      className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
+                    >
+                      Logout
+                    </button>
                   </div>
                 )}
               </div>
@@ -180,6 +207,36 @@ const Navbar = () => {
         onClose={() => setAuthMode(null)}
         onSwitchMode={(newMode) => setAuthMode(newMode)}
       />
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowLogoutConfirm(false)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <h3 className="font-poppins text-lg font-semibold text-brand-bee">
+              Log out?
+            </h3>
+            <p className="font-roboto mt-2 text-sm text-slate-600">
+              Are you sure you want to log out?
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-brand-bee hover:bg-slate-50"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                onClick={handleConfirmLogout}
+              >
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
