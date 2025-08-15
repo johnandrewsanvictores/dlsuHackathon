@@ -1,14 +1,35 @@
 import myJob from '../models/myjobsModel.js';
 import mongoose from 'mongoose';
+import myJob from "../models/myjobsModel.js";
 
-/**
- * Update the status of a user's job application
- * @param {string} userId - The ID of the user
- * @param {string} jobApplicationId - The ID of the job application (myJob document)
- * @param {string} newStatus - The new status ('applied', 'readyToInterview', 'rejected', 'hired')
- * @param {Date} interviewDate - Optional interview date (required if status is 'readyToInterview')
- * @returns {Object} Updated job application or error
- */
+export const createMyJobs = async (req, res) => {
+    try {
+        const {jobInfoId} = req.body;
+        const userId = req.user._id;
+
+        const jobExist = await myJob.findOne({jobInfoId})
+        const userExist = await myJob.findOne({userId})
+
+        const existingApplication = await myJob.findOne({ jobInfoId, userId });
+        if (existingApplication) {
+            return res.status(409).json({ error: "Job already exists in the database" });
+        }
+
+
+        const jobApplied = await myJob.create({userId, jobInfoId, applicationStatus});
+
+        res.status(201).json({
+            jobApplied: {
+                userId,
+                jobInfoId
+            },
+            success: "true",
+            message: "Job created successfully"
+        });
+    } catch(error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+}
 
 
 export const updateJobStatus = async (req, res) => {
@@ -74,8 +95,8 @@ export const updateJobStatus = async (req, res) => {
       jobApplicationId,
       updateData,
       { 
-        new: true, // Return the updated document
-        runValidators: true // Run schema validators
+        new: true,
+        runValidators: true 
       }
     );
 
@@ -94,10 +115,6 @@ export const updateJobStatus = async (req, res) => {
   }
 };
 
-/**
- * Express.js route handler for updating job status
- * PUT /api/jobs/:jobApplicationId/status
- */
 export const updateJobStatusHandler = async (req, res) => {
   try {
     const { jobApplicationId } = req.params;
@@ -119,12 +136,7 @@ export const updateJobStatusHandler = async (req, res) => {
   }
 };
 
-/**
- * Get all job applications for a user with optional status filter
- * @param {string} userId - The ID of the user
- * @param {string} statusFilter - Optional status to filter by
- * @returns {Object} Array of job applications or error
- */
+
 export const getUserJobApplications = async (userId, statusFilter = null) => {
   try {
     if (!userId) {
