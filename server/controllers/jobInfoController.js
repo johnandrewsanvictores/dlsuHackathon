@@ -10,7 +10,18 @@ export const getJobInfo = async(req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const {sort = 'postedDate', order = 'desc', search, workArrangement, employmentType, location} = req.query;
+        const {
+            sort = 'postedDate', 
+            order = 'desc', 
+            search, 
+            workArrangement, 
+            employmentType, 
+            location,
+            experienceLevel,
+            industry,
+            salaryMin,
+            salaryMax
+        } = req.query;
 
         // Build filters
         const filters = {};
@@ -27,8 +38,35 @@ export const getJobInfo = async(req, res) => {
         if (employmentType && employmentType !== 'all') {
             filters.employmentType = employmentType;
         }
-        if (location && location !== 'all') {
+        if (experienceLevel && experienceLevel !== 'all') {
+            filters.experienceLevel = experienceLevel;
+        }
+        if (industry && industry !== 'all') {
+            filters.industry = industry;
+        }
+        if (location) {
             filters.location = { $regex: location, $options: 'i' };
+        }
+        
+        // Salary range filters
+        if (salaryMin || salaryMax) {
+            filters.$or = filters.$or || [];
+            const salaryConditions = [];
+            
+            if (salaryMin) {
+                salaryConditions.push({ 'salaryRange.minimum': { $gte: parseInt(salaryMin) } });
+                salaryConditions.push({ 'salaryRange.maximum': { $gte: parseInt(salaryMin) } });
+            }
+            
+            if (salaryMax) {
+                salaryConditions.push({ 'salaryRange.minimum': { $lte: parseInt(salaryMax) } });
+                salaryConditions.push({ 'salaryRange.maximum': { $lte: parseInt(salaryMax) } });
+            }
+            
+            if (salaryConditions.length > 0) {
+                filters.$and = filters.$and || [];
+                filters.$and.push({ $and: salaryConditions });
+            }
         }
 
         const jobInfos = await jobsInfo.find(filters)

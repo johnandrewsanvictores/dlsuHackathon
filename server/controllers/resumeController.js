@@ -116,12 +116,79 @@ export const getResumeContext = async (req, res) => {
 
 export const filterListingByResume = async (req, res) => {
     try {
+        // Handle both body and query parameters for compatibility
+        const body = req.body || {};
+        const { additionalFilters = {}, page = 1, limit = 12 } = body;
+        
+        console.log('Resume filter request received:', { 
+            hasAdditionalFilters: !!additionalFilters,
+            additionalFiltersCount: Object.keys(additionalFilters || {}).length,
+            page, 
+            limit 
+        });
+        
         const data = await getJobs({});
         if (data.success === false) {
-            return res.status(500).json({ error: 'Failed to parse PDF' });
+            return res.status(500).json({ error: 'Failed to get jobs' });
         }
 
-        const jobs = data.jobInfos;
+        let jobs = data.jobInfos;
+
+        // Apply additional filters first (only if they exist and have values)
+        if (additionalFilters && typeof additionalFilters === 'object' && Object.keys(additionalFilters).length > 0) {
+            jobs = jobs.filter(job => {
+                // Search filter
+                if (additionalFilters.search) {
+                    const searchTerm = additionalFilters.search.toLowerCase();
+                    const searchMatch = (
+                        job.jobTitle?.toLowerCase().includes(searchTerm) ||
+                        job.companyName?.toLowerCase().includes(searchTerm) ||
+                        job.shortDescription?.toLowerCase().includes(searchTerm)
+                    );
+                    if (!searchMatch) return false;
+                }
+
+                // Work arrangement filter
+                if (additionalFilters.workArrangement && additionalFilters.workArrangement !== 'all') {
+                    if (job.workArrangement !== additionalFilters.workArrangement) return false;
+                }
+
+                // Employment type filter
+                if (additionalFilters.employmentType && additionalFilters.employmentType !== 'all') {
+                    if (job.employmentType !== additionalFilters.employmentType) return false;
+                }
+
+                // Experience level filter
+                if (additionalFilters.experienceLevel && additionalFilters.experienceLevel !== 'all') {
+                    if (job.experienceLevel !== additionalFilters.experienceLevel) return false;
+                }
+
+                // Industry filter
+                if (additionalFilters.industry && additionalFilters.industry !== 'all') {
+                    if (job.industry !== additionalFilters.industry) return false;
+                }
+
+                // Location filter
+                if (additionalFilters.location) {
+                    const locationMatch = job.location?.toLowerCase().includes(additionalFilters.location.toLowerCase());
+                    if (!locationMatch) return false;
+                }
+
+                // Salary range filters
+                if (additionalFilters.salaryMin) {
+                    const minSalary = parseInt(additionalFilters.salaryMin);
+                    if (job.salaryRange?.minimum && job.salaryRange.minimum < minSalary) return false;
+                    if (job.salaryRange?.maximum && job.salaryRange.maximum < minSalary) return false;
+                }
+
+                if (additionalFilters.salaryMax) {
+                    const maxSalary = parseInt(additionalFilters.salaryMax);
+                    if (job.salaryRange?.minimum && job.salaryRange.minimum > maxSalary) return false;
+                }
+
+                return true;
+            });
+        }
 
         const resumeContext = await User.findOne({ _id: req.user.userId }).select('resumeContext -_id');
         if (!resumeContext) {
@@ -136,7 +203,9 @@ export const filterListingByResume = async (req, res) => {
             return res.status(200).json({ 
                 filteredJobs: [],
                 message: 'No skills found in resume. Please upload a more detailed resume or manually search for jobs.',
-                resumeSkills: []
+                resumeSkills: [],
+                matchedJobsCount: 0,
+                totalJobsProcessed: jobs.length
             });
         }
 
@@ -201,20 +270,30 @@ export const filterListingByResume = async (req, res) => {
         // Use Promise.all to parallelize job processing
         const results = await Promise.all(jobs.map(job => matchJobSkills(job)));
 
-        const filteredJobs = results
+        const allFilteredJobs = results
             .filter(r => r !== null)
             .sort((a, b) => b.matchScore - a.matchScore); // highest match first
 
-        console.log('Filtered jobs count:', filteredJobs.length);
+        console.log('Filtered jobs count:', allFilteredJobs.length);
+
+        // Apply pagination
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedJobs = allFilteredJobs.slice(startIndex, endIndex);
 
         return res.status(200).json({ 
-            filteredJobs,
+            filteredJobs: paginatedJobs,
             resumeSkills,
             totalJobsProcessed: jobs.length,
-            matchedJobsCount: filteredJobs.length,
-            message: filteredJobs.length > 0 ? 'Jobs matched successfully' : 'No matching jobs found'
+            matchedJobsCount: allFilteredJobs.length,
+            currentPage: page,
+            totalPages: Math.ceil(allFilteredJobs.length / limit),
+            hasNextPage: endIndex < allFilteredJobs.length,
+            hasPrevPage: page > 1,
+            message: allFilteredJobs.length > 0 ? 'Jobs matched successfully' : 'No matching jobs found'
         });
     } catch (err) {
-        res.status(500).json({ error: 'Server error' + err });
+        console.error('Resume filtering error:', err);
+        res.status(500).json({ error: 'Server error: ' + err.message });
     }
 };

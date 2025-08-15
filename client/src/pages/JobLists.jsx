@@ -74,6 +74,16 @@ const JobCard = ({ job, onApply }) => {
             {new Date(job.postedDate).toLocaleDateString()}
           </span>
         )}
+        {(job.salaryRange?.minimum || job.salaryRange?.maximum) && (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            {job.salaryRange?.minimum && job.salaryRange?.maximum 
+              ? `₱${job.salaryRange.minimum.toLocaleString()} - ₱${job.salaryRange.maximum.toLocaleString()}`
+              : job.salaryRange?.minimum 
+                ? `₱${job.salaryRange.minimum.toLocaleString()}+`
+                : `Up to ₱${job.salaryRange.maximum.toLocaleString()}`
+            }
+          </span>
+        )}
       </div>
 
       {job.shortDescription && (
@@ -115,7 +125,12 @@ const JobLists = () => {
     search: '',
     workArrangement: 'all',
     employmentType: 'all',
-    showAIFiltered: false
+    experienceLevel: 'all',
+    industry: 'all',
+    salaryMin: '',
+    salaryMax: '',
+    location: '',
+    searchWithResume: false
   });
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -126,30 +141,71 @@ const JobLists = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [filters.showAIFiltered, pagination.currentPage]);
+  }, [pagination.currentPage]);
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({
-        page: pagination.currentPage,
-        limit: 12,
-        ...(filters.search && { search: filters.search }),
-        ...(filters.workArrangement !== 'all' && { workArrangement: filters.workArrangement }),
-        ...(filters.employmentType !== 'all' && { employmentType: filters.employmentType })
-      });
+      if (filters.searchWithResume) {
+        // Use resume-based filtering endpoint with additional filters
+        const additionalFilters = {};
+        
+        // Only add filters that have values
+        if (filters.search) additionalFilters.search = filters.search;
+        if (filters.workArrangement !== 'all') additionalFilters.workArrangement = filters.workArrangement;
+        if (filters.employmentType !== 'all') additionalFilters.employmentType = filters.employmentType;
+        if (filters.experienceLevel !== 'all') additionalFilters.experienceLevel = filters.experienceLevel;
+        if (filters.industry !== 'all') additionalFilters.industry = filters.industry;
+        if (filters.location) additionalFilters.location = filters.location;
+        if (filters.salaryMin) additionalFilters.salaryMin = parseInt(filters.salaryMin);
+        if (filters.salaryMax) additionalFilters.salaryMax = parseInt(filters.salaryMax);
 
-      const endpoint = filters.showAIFiltered ? '/jobs/ai-filtered' : '/jobs';
-      const response = await api.get(`${endpoint}?${params}`);
-      
-      setJobs(response.data.jobInfos || []);
-      setFilteredJobs(response.data.jobInfos || []);
-      setPagination(response.data.pagination || {});
-      
-      if (response.data.resumeSkills) {
-        setResumeSkills(response.data.resumeSkills);
+        console.log('Sending resume filter request:', { additionalFilters, page: pagination.currentPage, limit: 12 });
+        
+        const response = await api.post('/resume/filter-jobs', {
+          additionalFilters,
+          page: pagination.currentPage,
+          limit: 12
+        });
+        
+        console.log('Resume filter response:', response.data);
+        
+        setJobs(response.data.filteredJobs || []);
+        setFilteredJobs(response.data.filteredJobs || []);
+        setResumeSkills(response.data.resumeSkills || []);
+        
+        // Create pagination from response
+        const total = response.data.matchedJobsCount || 0;
+        setPagination({
+          currentPage: pagination.currentPage,
+          totalPages: Math.ceil(total / 12),
+          totalJobs: total,
+          hasNextPage: pagination.currentPage < Math.ceil(total / 12),
+          hasPrevPage: pagination.currentPage > 1
+        });
+      } else {
+        // Regular job search
+        const params = new URLSearchParams({
+          page: pagination.currentPage,
+          limit: 12,
+          ...(filters.search && { search: filters.search }),
+          ...(filters.workArrangement !== 'all' && { workArrangement: filters.workArrangement }),
+          ...(filters.employmentType !== 'all' && { employmentType: filters.employmentType }),
+          ...(filters.experienceLevel !== 'all' && { experienceLevel: filters.experienceLevel }),
+          ...(filters.industry !== 'all' && { industry: filters.industry }),
+          ...(filters.location && { location: filters.location }),
+          ...(filters.salaryMin && { salaryMin: filters.salaryMin }),
+          ...(filters.salaryMax && { salaryMax: filters.salaryMax })
+        });
+
+        const response = await api.get(`/jobs?${params}`);
+        
+        setJobs(response.data.jobInfos || []);
+        setFilteredJobs(response.data.jobInfos || []);
+        setPagination(response.data.pagination || {});
+        setResumeSkills([]);
       }
     } catch (err) {
       console.error('Error fetching jobs:', err);
@@ -223,107 +279,257 @@ const JobLists = () => {
         <div className="mx-auto max-w-7xl px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <div>
                 <h1 className="font-poppins text-3xl font-bold text-slate-900">
                   Job Opportunities
-          </h1>
-          <p className="font-roboto mt-2 text-slate-600">
-                  Discover jobs from multiple platforms, matched to your skills
+                </h1>
+                <p className="font-roboto mt-2 text-slate-600">
+                  Discover jobs from multiple platforms, matched to your skills and preferences
                 </p>
               </div>
-              <button
-                onClick={triggerScraping}
-                disabled={loading}
-                className="rounded-lg bg-brand-honey px-4 py-2 text-sm font-medium text-brand-bee transition-colors hover:bg-brand-honey-600 disabled:opacity-50"
-              >
-                {loading ? 'Scraping...' : 'Update Jobs'}
-              </button>
             </div>
 
-            {/* AI Filter Toggle */}
-            <div className="mb-6">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={filters.showAIFiltered}
-                  onChange={(e) => handleFilterChange('showAIFiltered', e.target.checked)}
-                  className="form-checkbox h-4 w-4 text-brand-honey"
-                />
-                <span className="ml-2 text-sm font-medium text-slate-700">
-                  Show only AI-matched jobs {resumeSkills.length > 0 && `(based on: ${resumeSkills.slice(0, 3).join(', ')}${resumeSkills.length > 3 ? '...' : ''})`}
-                </span>
-              </label>
-            </div>
+            {/* Advanced Search & Filters */}
+            <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+              <div className="mb-6">
+                <h3 className="font-poppins text-lg font-semibold text-slate-900 mb-4">
+                  Search & Filter Jobs
+                </h3>
+                
+                {/* Search Options */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.searchWithResume}
+                        onChange={(e) => handleFilterChange('searchWithResume', e.target.checked)}
+                        className="form-checkbox h-4 w-4 text-brand-honey rounded focus:ring-brand-honey"
+                      />
+                      <span className="ml-2 text-sm font-medium text-slate-700">
+                        Search using my resume
+                      </span>
+                    </label>
+                  </div>
+                  
+                  {filters.searchWithResume && (
+                    <div className="bg-brand-honey-50 border border-brand-honey-200 rounded-lg p-3">
+                      <p className="text-sm text-brand-bee">
+                        <span className="font-medium">Resume Search Active:</span> Jobs will be matched based on your uploaded resume skills and experience.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <input
-                  type="text"
-                  placeholder="Search jobs..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey"
-                />
-              </div>
-              <div>
-                <select
-                  value={filters.workArrangement}
-                  onChange={(e) => handleFilterChange('workArrangement', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey"
-                >
-                  <option value="all">All Work Types</option>
-                  <option value="remote">Remote</option>
-                  <option value="hybrid">Hybrid</option>
-                  <option value="onSite">On-site</option>
-                </select>
-              </div>
-              <div>
-                <select
-                  value={filters.employmentType}
-                  onChange={(e) => handleFilterChange('employmentType', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey"
-                >
-                  <option value="all">All Job Types</option>
-                  <option value="fullTime">Full Time</option>
-                  <option value="partTime">Part Time</option>
-                  <option value="contract">Contract</option>
-                  <option value="internship">Internship</option>
-                </select>
-              </div>
-              <div>
-                <button
-                  onClick={() => {
-                    setFilters({
-                      search: '',
-                      workArrangement: 'all',
-                      employmentType: 'all',
-                      showAIFiltered: false
-                    });
-                    setPagination(prev => ({ ...prev, currentPage: 1 }));
-                  }}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Clear Filters
-                </button>
+                {/* Search and Basic Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Search Keywords
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Job title, company, skills..."
+                      value={filters.search}
+                      onChange={(e) => handleFilterChange('search', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="City, state, country..."
+                      value={filters.location}
+                      onChange={(e) => handleFilterChange('location', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Work Arrangement
+                    </label>
+                    <select
+                      value={filters.workArrangement}
+                      onChange={(e) => handleFilterChange('workArrangement', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    >
+                      <option value="all">All Work Types</option>
+                      <option value="remote">Remote</option>
+                      <option value="hybrid">Hybrid</option>
+                      <option value="onSite">On-site</option>
+                      <option value="flexTime">Flex Time</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Employment Type
+                    </label>
+                    <select
+                      value={filters.employmentType}
+                      onChange={(e) => handleFilterChange('employmentType', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    >
+                      <option value="all">All Job Types</option>
+                      <option value="fullTime">Full Time</option>
+                      <option value="partTime">Part Time</option>
+                      <option value="contract">Contract</option>
+                      <option value="selfEmployed">Self Employed</option>
+                      <option value="internship">Internship</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Advanced Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Experience Level
+                    </label>
+                    <select
+                      value={filters.experienceLevel}
+                      onChange={(e) => handleFilterChange('experienceLevel', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    >
+                      <option value="all">All Levels</option>
+                      <option value="Entry">Entry Level</option>
+                      <option value="Mid">Mid Level</option>
+                      <option value="Senior">Senior Level</option>
+                      <option value="Executive">Executive</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Industry
+                    </label>
+                    <select
+                      value={filters.industry}
+                      onChange={(e) => handleFilterChange('industry', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    >
+                      <option value="all">All Industries</option>
+                      <option value="technology">Technology</option>
+                      <option value="finance">Finance</option>
+                      <option value="healthcare">Healthcare</option>
+                      <option value="education">Education</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="retail">Retail</option>
+                      <option value="manufacturing">Manufacturing</option>
+                      <option value="consulting">Consulting</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Min Salary
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 50000"
+                      value={filters.salaryMin}
+                      onChange={(e) => handleFilterChange('salaryMin', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Max Salary
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 100000"
+                      value={filters.salaryMax}
+                      onChange={(e) => handleFilterChange('salaryMax', e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey focus:border-brand-honey"
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={fetchJobs}
+                      className="rounded-lg bg-brand-honey px-6 py-2 text-sm font-medium text-brand-bee transition-colors hover:bg-brand-honey-600 focus:outline-none focus:ring-2 focus:ring-brand-honey"
+                    >
+                      Search Jobs
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setFilters({
+                          search: '',
+                          workArrangement: 'all',
+                          employmentType: 'all',
+                          experienceLevel: 'all',
+                          industry: 'all',
+                          salaryMin: '',
+                          salaryMax: '',
+                          location: '',
+                          searchWithResume: false
+                        });
+                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                      }}
+                      className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Clear All Filters
+                    </button>
+                  </div>
+                  
+                  <div className="text-sm text-slate-500">
+                    {Object.values(filters).filter(v => v && v !== 'all' && v !== false).length} filters active
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Results */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="rounded-lg border border-slate-200 bg-white p-6">
-                    <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-slate-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-3 bg-slate-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+            <div className="relative">
+              {/* Loading Overlay */}
+              <div className="flex items-center justify-center py-16">
+                <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm mx-auto">
+                  <div className="flex flex-col items-center">
+                    <div className="relative">
+                      <div className="w-12 h-12 border-4 border-brand-honey-200 rounded-full animate-spin"></div>
+                      <div className="absolute top-0 left-0 w-12 h-12 border-4 border-brand-honey border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-slate-900 font-poppins">
+                      {filters.searchWithResume ? 'Matching Jobs to Your Resume' : 'Searching Jobs'}
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-600 text-center">
+                      {filters.searchWithResume 
+                        ? 'Analyzing your skills and finding the best matches...'
+                        : 'Finding the perfect opportunities for you...'
+                      }
+                    </p>
                   </div>
                 </div>
-              ))}
+              </div>
+              
+              {/* Skeleton Cards (faded background) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-30">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="rounded-lg border border-slate-200 bg-white p-6">
+                      <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-slate-200 rounded w-1/2 mb-4"></div>
+                      <div className="h-3 bg-slate-200 rounded w-full mb-2"></div>
+                      <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -341,13 +547,13 @@ const JobLists = () => {
             <div className="text-center py-12">
               <div className="rounded-lg bg-slate-100 p-8 max-w-md mx-auto">
                 <p className="text-slate-600 mb-4">
-                  {filters.showAIFiltered 
-                    ? "No jobs match your resume skills. Try uploading a resume or disable AI filtering."
-                    : "No jobs found. Try different filters or update job listings."
+                  {filters.searchWithResume 
+                    ? "No jobs match your resume skills. Try uploading a better resume or adjusting your filters."
+                    : "No jobs found. Try different filters or refresh job listings."
                   }
                 </p>
                 <button
-                  onClick={triggerScraping}
+                  onClick={fetchJobs}
                   className="rounded-lg bg-brand-honey px-4 py-2 text-sm font-medium text-brand-bee hover:bg-brand-honey-600"
                 >
                   Refresh Job Listings
@@ -359,7 +565,7 @@ const JobLists = () => {
               <div className="mb-6">
                 <p className="text-sm text-slate-600">
                   Showing {filteredJobs.length} of {pagination.totalJobs} jobs
-                  {filters.showAIFiltered && " (AI-filtered)"}
+                  {filters.searchWithResume && " (matched to your resume)"}
                 </p>
               </div>
 
