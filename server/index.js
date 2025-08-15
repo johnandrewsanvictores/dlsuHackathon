@@ -13,6 +13,7 @@ import connectDbB from './config/db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import {scrapeOnlineJobs} from "./scraper-onlinejobs.js";
 
 dotenv.config();
 const app = express();
@@ -57,6 +58,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
 
+await scrapeOnlineJobs();
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
