@@ -1,7 +1,7 @@
 services:
   my-app-client:
     build: ./client
-    container_name: boiler-client
+    container_name: dlsuProject-client
     ports:
       - '5173:5173'
     env_file:
@@ -14,7 +14,7 @@ services:
 
   my-app-server:
     build: ./server
-    container_name: boiler-server
+    container_name: dlsuProject-server
     ports:
       - '3000:3000'
     volumes:
