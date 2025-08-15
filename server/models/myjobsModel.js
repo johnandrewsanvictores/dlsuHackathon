@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const myJobsSchema = new mongoose.Schema({
   userID: { type: mongoose.Schema.Types.ObjectId, required: true },
-  jobInFold: { type: mongoose.Schema.Types.ObjectId},
+  jobInfoId: { type: mongoose.Schema.Types.ObjectId},
   status: { 
     type: String,
     enum: ["applied", "readyToInterview", "rejected", "hired"],
