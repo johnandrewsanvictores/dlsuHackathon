@@ -6,6 +6,8 @@ import MyJobsPage from './pages/myJobs.jsx';
 import Dashboard from './pages/dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Calendar from './pages/Calendar.jsx';
+import About from './pages/About.jsx';
+import Billing from './pages/Billing.jsx';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/calendar" element={<Calendar />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/billing" element={<Billing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

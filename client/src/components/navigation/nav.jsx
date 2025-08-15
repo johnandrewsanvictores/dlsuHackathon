@@ -48,24 +48,24 @@ const Navbar = () => {
           </div>
 
           <div className="hidden items-center justify-center gap-8 md:flex">
-            <a
-              href="#"
+            <button
+              onClick={() => navigate("/")}
               className="text-slate-700 transition-colors hover:text-slate-900"
             >
               Homepage
-            </a>
-            <a
-              href="#billing"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-            >
-              Billing
-            </a>
-            <a
-              href="#about"
+            </button>
+            <button
+              onClick={() => navigate("/about")}
               className="text-slate-700 transition-colors hover:text-slate-900"
             >
               About
-            </a>
+            </button>
+            <button
+              onClick={() => navigate("/billing")}
+              className="text-slate-700 transition-colors hover:text-slate-900"
+            >
+              Pricing
+            </button>
           </div>
 
           <div className="flex items-center justify-end gap-3">

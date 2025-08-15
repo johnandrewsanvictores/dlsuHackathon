@@ -13,16 +13,17 @@ export const getUser = (req, res) => {
 
 export const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select('-password'); // exclude password
-
+        const userId = req.user.userId;
+        const user = await User.findById(userId).select('-password -rememberToken');
+        
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-
-        res.json({ user: { ...user.toObject(), userId: user._id } });
+        
+        res.json(user);
     } catch (err) {
-        console.error('Profile error:', err);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error getting user profile:', err);
+        res.status(500).json({ error: 'Failed to get user profile' });
     }
 }
 
@@ -70,5 +71,44 @@ export const createUser = async (req, res) => {
         });
     } catch(error) {
         res.status(500).json({ message: 'Server error', error: err.message });
+    }
+}
+
+export const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { firstName, lastName, email, username } = req.body;
+        
+        // Check if username or email already exists (exclude current user)
+        const existingUser = await User.findOne({
+            $and: [
+                { _id: { $ne: userId } },
+                { $or: [{ email }, { username }] }
+            ]
+        });
+        
+        if (existingUser) {
+            if (existingUser.email === email) {
+                return res.status(409).json({ error: "Email already exists" });
+            }
+            if (existingUser.username === username) {
+                return res.status(409).json({ error: "Username already exists" });
+            }
+        }
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { firstName, lastName, email, username },
+            { new: true, select: '-password -rememberToken' }
+        );
+        
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json(updatedUser);
+    } catch (err) {
+        console.error('Error updating user profile:', err);
+        res.status(500).json({ error: 'Failed to update user profile' });
     }
 }

@@ -116,6 +116,280 @@ const JobCard = ({ job, onApply }) => {
   );
 };
 
+const ApplyJobModal = ({ isOpen, job, onClose, onApply }) => {
+  const [resumeExists, setResumeExists] = useState(false);
+  const [resumeText, setResumeText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [enhancedResume, setEnhancedResume] = useState('');
+  const [showEnhancement, setShowEnhancement] = useState(false);
+  const [applyLoading, setApplyLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      checkResumeStatus();
+    }
+  }, [isOpen]);
+
+  const checkResumeStatus = async () => {
+    try {
+      const response = await api.get('/user/profile');
+      const hasResume = response.data.resumeContext && response.data.resumeContext.length > 0;
+      setResumeExists(hasResume);
+      setResumeText(response.data.resumeContext || '');
+    } catch (error) {
+      console.error('Error checking resume status:', error);
+      setResumeExists(false);
+    }
+  };
+
+  const enhanceResume = async () => {
+    if (!resumeText || !job) return;
+    
+    setLoading(true);
+    try {
+      const prompt = `
+        Based on this job posting and the user's current resume, provide specific enhancement tips and suggestions:
+        
+        Job Title: ${job.jobTitle}
+        Company: ${job.companyName}
+        Job Description: ${job.shortDescription || 'N/A'}
+        Work Arrangement: ${job.workArrangement}
+        Employment Type: ${job.employmentType}
+        
+        Current Resume:
+        ${resumeText}
+        
+        Please provide:
+        1. 3-5 specific improvement suggestions
+        2. Keywords to add based on the job requirements
+        3. Skills that should be highlighted or added
+        4. Format improvements
+        
+        Format the response as a JSON object with these fields:
+        {
+          "improvements": ["tip1", "tip2", "tip3"],
+          "keywords": ["keyword1", "keyword2"],
+          "skills": ["skill1", "skill2"],
+          "formatting": ["format tip1", "format tip2"]
+        }
+      `;
+
+      const encodedPrompt = encodeURIComponent(prompt);
+      const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}`);
+      const data = await response.text();
+      
+      // Try to parse JSON from the response
+      const jsonMatch = data.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const enhancementData = JSON.parse(jsonMatch[0]);
+        setEnhancedResume(enhancementData);
+        setShowEnhancement(true);
+      } else {
+        setEnhancedResume({
+          improvements: ["Focus on quantifiable achievements", "Tailor skills to job requirements", "Optimize for ATS systems"],
+          keywords: ["Based on job posting", "Industry-specific terms"],
+          skills: ["Technical skills from job posting", "Soft skills mentioned"],
+          formatting: ["Use bullet points", "Keep sections organized"]
+        });
+        setShowEnhancement(true);
+      }
+    } catch (error) {
+      console.error('Error enhancing resume:', error);
+      setEnhancedResume({
+        improvements: ["Error getting AI suggestions. Please try again."],
+        keywords: [],
+        skills: [],
+        formatting: []
+      });
+      setShowEnhancement(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApplyNow = async () => {
+    if (!resumeExists) {
+      alert('Please upload a resume first before applying.');
+      return;
+    }
+
+    setApplyLoading(true);
+    try {
+      await onApply(job);
+      onClose();
+    } catch (error) {
+      console.error('Error applying to job:', error);
+    } finally {
+      setApplyLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-200 p-6">
+          <div>
+            <h2 className="font-poppins text-xl font-semibold text-slate-900">
+              Apply to {job?.jobTitle}
+            </h2>
+            <p className="text-sm text-slate-600 mt-1">
+              {job?.companyName} • {job?.location}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-6">
+            {/* Resume Status */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="font-medium text-slate-900 mb-2">Resume Status</h3>
+              {resumeExists ? (
+                <div className="flex items-center text-green-700">
+                  <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium">Resume uploaded and ready</span>
+                </div>
+              ) : (
+                <div className="flex items-center text-red-700">
+                  <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium">No resume uploaded</span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Use Current Resume */}
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-2">Current Resume</h4>
+                <p className="text-sm text-slate-600 mb-4">
+                  Use your uploaded resume for this application
+                </p>
+                <button
+                  disabled={!resumeExists}
+                  className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                    resumeExists
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {resumeExists ? 'Use Current Resume' : 'No Resume Available'}
+                </button>
+              </div>
+
+              {/* Enhance Resume */}
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-2">Enhance Resume</h4>
+                <p className="text-sm text-slate-600 mb-4">
+                  Get AI tips to improve your resume for this job
+                </p>
+                <button
+                  onClick={enhanceResume}
+                  disabled={!resumeExists || loading}
+                  className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                    resumeExists && !loading
+                      ? 'bg-brand-honey text-brand-bee hover:bg-brand-honey-600'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {loading ? 'Analyzing...' : 'Get Enhancement Tips'}
+                </button>
+              </div>
+
+              {/* Apply Now */}
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-2">Apply Now</h4>
+                <p className="text-sm text-slate-600 mb-4">
+                  Submit your application and track it
+                </p>
+                <button
+                  onClick={handleApplyNow}
+                  disabled={!resumeExists || applyLoading}
+                  className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                    resumeExists && !applyLoading
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {applyLoading ? 'Applying...' : 'Apply Now'}
+                </button>
+              </div>
+            </div>
+
+            {/* Enhancement Results */}
+            {showEnhancement && enhancedResume && (
+              <div className="bg-brand-honey-50 border border-brand-honey-200 rounded-lg p-6">
+                <h3 className="font-medium text-brand-bee mb-4">🤖 AI Resume Enhancement Tips</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">📈 Improvements</h4>
+                    <ul className="space-y-1">
+                      {enhancedResume.improvements?.map((tip, index) => (
+                        <li key={index} className="text-sm text-slate-700 flex items-start">
+                          <span className="text-brand-honey mr-2">•</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">🔑 Keywords to Add</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {enhancedResume.keywords?.map((keyword, index) => (
+                        <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">⚡ Skills to Highlight</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {enhancedResume.skills?.map((skill, index) => (
+                        <span key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-slate-900 mb-2">📄 Formatting Tips</h4>
+                    <ul className="space-y-1">
+                      {enhancedResume.formatting?.map((tip, index) => (
+                        <li key={index} className="text-sm text-slate-700 flex items-start">
+                          <span className="text-brand-honey mr-2">•</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const JobLists = () => {
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
@@ -138,6 +412,8 @@ const JobLists = () => {
     totalJobs: 0
   });
   const [resumeSkills, setResumeSkills] = useState([]);
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -217,7 +493,12 @@ const JobLists = () => {
     }
   };
 
-  const handleApply = async (job) => {
+  const handleApply = (job) => {
+    setSelectedJob(job);
+    setApplyModalOpen(true);
+  };
+
+  const handleConfirmApply = async (job) => {
     try {
       // Add job to user's tracked applications
       const payload = {
@@ -609,6 +890,17 @@ const JobLists = () => {
           )}
         </div>
       </div>
+
+      {/* Apply Job Modal */}
+      <ApplyJobModal
+        isOpen={applyModalOpen}
+        job={selectedJob}
+        onClose={() => {
+          setApplyModalOpen(false);
+          setSelectedJob(null);
+        }}
+        onApply={handleConfirmApply}
+      />
     </>
   );
 };

@@ -228,12 +228,12 @@ const Homepage = () => {
             </h4>
             <ul className="font-roboto mt-3 space-y-2 text-sm text-slate-600">
               <li>
-                <a href="#about" className="hover:text-slate-900">
+                <a href="/about" className="hover:text-slate-900">
                   About
                 </a>
               </li>
               <li>
-                <a href="#billing" className="hover:text-slate-900">
+                <a href="/billing" className="hover:text-slate-900">
                   Billing
                 </a>
               </li>
