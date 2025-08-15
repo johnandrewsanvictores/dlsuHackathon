@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthModal from "../modals/AuthModals";
 import api from "/axios.js";
+import logo from "../../assets/WorkHiveLogo.png";
 
 const Navbar = () => {
   const [authMode, setAuthMode] = useState(null);
@@ -47,22 +48,12 @@ const Navbar = () => {
     navigate("/");
   };
   return (
-    <nav className="w-full border-b bg-white">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="grid h-16 grid-cols-3 items-center">
+    <nav className="w-full border-b bg-white py-2 md:py-3">
+      <div className="mx-auto max-w-7xl px-6 md:px-8">
+        <div className="grid min-h-[4.5rem] grid-cols-3 items-center gap-4 md:min-h-[5rem]">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-brand-honey p-2.5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                strokeWidth="2"
-                stroke="white"
-                className="h-6 w-6"
-              >
-                <path d="M6 7h12a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z" />
-                <path d="M9 7V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v1" />
-              </svg>
+            <div className="rounded-xl p-2.5">
+              <img src={logo} alt="Work Hive Logo" className="h-12 w-12" />
             </div>
             <span className="text-xl font-bold text-brand-bee">
               Work <span className="text-brand-honey">Hive</span>
