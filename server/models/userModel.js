@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: false },
     googleId: { type: String, required: false },
     rememberToken: { type: String, required: false },
-    resume: {type: String, required: true}
+    resume: {type: String, required: false},
+    resumeContext: {type: String, required: false, default: ""},
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

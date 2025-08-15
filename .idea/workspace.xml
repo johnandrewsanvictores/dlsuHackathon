@@ -4,19 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="73c3fc82-4335-48d0-9d62-ea7c7a0ae17d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/server/controllers/authController.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/controllers/userController.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/middleware/validation/userCreateValidation.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/models/userModel.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/routes/authRoute.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/routes/userRoute.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/server/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/utils/hash.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/utils/hash.js" afterDir="false" />
-    </list>
+    <list default="true" id="73c3fc82-4335-48d0-9d62-ea7c7a0ae17d" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -119,7 +107,7 @@
       <workItem from="1754055682002" duration="6207000" />
       <workItem from="1754100825755" duration="4528000" />
       <workItem from="1754123648099" duration="3188000" />
-      <workItem from="1755222575950" duration="4535000" />
+      <workItem from="1755222575950" duration="5583000" />
     </task>
     <servers />
   </component>

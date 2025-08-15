@@ -1,0 +1,28 @@
+{
+  "name": "onlinejobs-scraper",
+  "version": "1.0.0",
+  "description": "A comprehensive web scraper for OnlineJobs.ph to extract job listings data",
+  "main": "scraper-onlinejobs.js",
+  "scripts": {
+    "start": "node scraper-onlinejobs.js",
+    "scrape": "node scraper-onlinejobs.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "web-scraping",
+    "jobs",
+    "philippines",
+    "puppeteer",
+    "onlinejobs",
+    "data-extraction"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
