@@ -1,9 +1,7 @@
 import express from "express";
-import session from "express-session";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import passport from "./controllers/authController.js";
 
 import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoute.js";
@@ -29,34 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(
-  cors({
-    origin: [process.env.FRONTEND_BASE_URL, "https://accounts.google.com"],
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  })
-);
-
-// Session configuration
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      domain: process.env.COOKIE_DOMAIN,
-      maxAge: 1000 * 60 * 60, // 1 hour
-    },
-  })
-);
-
-// Passport setup
-app.use(passport.initialize());
-app.use(passport.session());
+// No sessions or Passport; pure JWT-based auth
 
 // Routes
 const __filename = fileURLToPath(import.meta.url);
@@ -80,6 +51,18 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/resume", resumeRoutes);
 app.use("/jobs", jobInfoRoutes);
+
+// Simple health check to verify server is up
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
+// Centralized error handler to avoid dropping connections
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Server error" });
+});
 
 // Start server
 app.listen(3000, () => {

@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "/axios.js";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
+  const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { user, setUser } = useAuth?.() ?? { user: null, setUser: () => {} };
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e) => {
@@ -81,68 +86,66 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
 
         <form
           className="mt-6 space-y-5"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             const form = e.currentTarget;
             const username = form.querySelector('input[name="username"]').value;
             const password = form.querySelector('input[name="password"]').value;
             setError("");
-            if (isSignin) {
-              api
-                .post("/auth/signin", { username, password })
-                .then((res) => {
-                  console.log(res);
-                  const user = res.data?.user;
-                  if (user) {
-                    localStorage.setItem("authUser", JSON.stringify(user));
-                    if (user.isFirstVisit) {
-                      window.location.href = "/onboarding";
-                    } else {
-                      window.location.href = "/jobs";
-                    }
-                  }
-                })
-                .catch((err) => {
-                  const msg =
-                    err?.response?.data?.error || "Login failed" + err;
-                  setError(msg);
+            setIsLoading(true);
+            try {
+              if (isSignin) {
+                console.log(isSignin);
+                const res = await api.post("/auth/signin", {
+                  username,
+                  password,
                 });
-            } else {
-              const firstName = form.querySelector(
-                'input[name="firstName"]'
-              ).value;
-              const lastName = form.querySelector(
-                'input[name="lastName"]'
-              ).value;
-              const email = form.querySelector('input[name="email"]').value;
-              const confirmPassword = form.querySelector(
-                'input[name="confirmPassword"]'
-              ).value;
-              if (password !== confirmPassword) {
-                setError("Passwords do not match");
-                return;
-              }
-              api
-                .post("/user/create", {
+                const data = res.data;
+                const loggedInUser = data?.user;
+                if (loggedInUser) {
+                  setUser(loggedInUser);
+                  // Clear form
+                  form.reset();
+                  onClose?.();
+                }
+              } else {
+                const firstName = form.querySelector(
+                  'input[name="firstName"]'
+                ).value;
+                const lastName = form.querySelector(
+                  'input[name="lastName"]'
+                ).value;
+                const email = form.querySelector('input[name="email"]').value;
+                const confirmPassword = form.querySelector(
+                  'input[name="confirmPassword"]'
+                ).value;
+                if (password !== confirmPassword) {
+                  setError("Passwords do not match");
+                  setIsLoading(false);
+                  return;
+                }
+                const res = await api.post("/user/create", {
                   firstName,
                   lastName,
                   email,
                   username,
                   password,
-                })
-                .then((res) => {
-                  const user = res.data?.user;
-                  if (user) {
-                    localStorage.setItem("authUser", JSON.stringify(user));
-                    window.location.href = "/onboarding";
-                  }
-                })
-                .catch((err) => {
-                  const msg =
-                    err?.response?.data?.error || "Sign up failed" + err;
-                  setError(msg);
                 });
+                const createdUser = res.data?.user;
+                if (createdUser) {
+                  setUser(createdUser);
+                  form.reset();
+                  onClose?.();
+                  navigate("/onboarding");
+                }
+              }
+            } catch (err) {
+              const msg =
+                err?.response?.data?.error ||
+                "An error occurred. Please try again." + err;
+              setError(msg);
             }
+            setIsLoading(false);
           }}
         >
           {!isSignin && (
@@ -227,9 +230,16 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-brand-honey px-4 py-3 font-roboto text-sm font-medium text-brand-bee transition-colors hover:bg-brand-honey-600"
+            disabled={isLoading}
+            className="w-full rounded-lg bg-brand-honey px-4 py-3 font-roboto text-sm font-medium text-brand-bee transition-colors hover:bg-brand-honey-600 disabled:opacity-50"
           >
-            {isSignin ? "Sign in" : "Create account"}
+            {isSignin
+              ? isLoading
+                ? "Signing in..."
+                : "Sign in"
+              : isLoading
+              ? "Creating..."
+              : "Create account"}
           </button>
 
           {error && (
