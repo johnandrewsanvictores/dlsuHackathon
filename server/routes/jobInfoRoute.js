@@ -1,10 +1,12 @@
 import express from "express";
 
 import auth from "../middleware/auth.js";
-import {getJobInfo} from "../controllers/jobInfoController.js";
+import {getJobInfo, getAIFilteredJobs, triggerJobScraping} from "../controllers/jobInfoController.js";
 
 const router = express.Router();
 
-router.get('/', auth, getJobInfo);
+router.get('/', getJobInfo);
+router.get('/ai-filtered', auth, getAIFilteredJobs);
+router.post('/scrape', auth, triggerJobScraping);
 
 export default router;

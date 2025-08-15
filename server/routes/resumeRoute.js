@@ -6,7 +6,7 @@ import upload from "../middleware/resumeUploadMiddleWare.js";
 
 const router = express.Router();
 
-// router.post('/get-resume-context', auth,  upload.single("resume"), getResumeContext);
-router.post('/filter-jobs-resume', auth, upload.single("resume"), filterListingByResume)
+router.post('/upload', auth, upload.single("resume"), getResumeContext);
+router.post('/filter-jobs', auth, filterListingByResume);
 
 export default router;

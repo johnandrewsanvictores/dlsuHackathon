@@ -1,12 +1,19 @@
 import mongoose from 'mongoose';
-import {Timestamp} from "mongodb";
 
 const jobsMoreInfoSchema = new mongoose.Schema({
-    jobInfold: { type: mongoose.Schema.Types.ObjectId},
-    sourceSite: { type: String},
-    originalJobId: { type: String},
-    sourceUrl: { type: String}
-});
+    jobInfold: { 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'jobsInfo',
+        required: true
+    },
+    sourceSite: { 
+        type: String,
+        required: true,
+        default: 'manual'
+    },
+    originalJobId: { type: String },
+    sourceUrl: { type: String }
+}, { timestamps: true });
 
 const jobsMoreInfo = mongoose.model('jobsMoreInfo', jobsMoreInfoSchema);
 

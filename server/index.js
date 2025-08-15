@@ -9,6 +9,8 @@ import authRoutes from './routes/authRoute.js';
 import userRoutes from './routes/userRoute.js';
 import resumeRoutes from './routes/resumeRoute.js';
 import jobInfoRoutes from  './routes/jobInfoRoute.js';
+import manageJobsRoutes from './routes/manageJobsRoute.js';
+import adminRoutes from './routes/adminRoute.js';
 import connectDbB from './config/db.js';
 
 import path from 'path';
@@ -83,6 +85,9 @@ app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/resume', resumeRoutes);
 app.use('/jobs', jobInfoRoutes);
+app.use('/jobs', manageJobsRoutes);
+app.use('/dashboard', manageJobsRoutes);
+app.use('/admin', adminRoutes);
 
 
 

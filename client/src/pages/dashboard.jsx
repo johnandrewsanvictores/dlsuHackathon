@@ -22,7 +22,7 @@ export default function Dashboard() {
       try {
         setIsLoading(true);
         // Fetch dashboard data from backend
-        const res = await api.get('/dashboard');
+        const res = await api.get('/dashboard/stats');
         if (res?.data) {
           setDashboardData(res.data);
         }
