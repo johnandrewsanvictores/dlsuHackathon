@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../axios';
+import Navbar from "../components/navigation/nav";
 
 const STATUS_OPTIONS = [
 	{ value: 'all', label: 'All' },
@@ -12,15 +13,15 @@ const STATUS_OPTIONS = [
 function statusBadgeColor(status) {
 	switch (status) {
 		case 'applied':
-			return 'bg-blue-100 text-blue-700 border-blue-200';
+			return 'bg-brand-honey-50 text-brand-bee border-brand-honey';
 		case 'readyForInterview':
-			return 'bg-amber-100 text-amber-700 border-amber-200';
+			return 'bg-amber-50 text-amber-700 border-amber-200';
 		case 'hired':
-			return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+			return 'bg-emerald-50 text-emerald-700 border-emerald-200';
 		case 'rejected':
-			return 'bg-rose-100 text-rose-700 border-rose-200';
+			return 'bg-rose-50 text-rose-700 border-rose-200';
 		default:
-			return 'bg-gray-100 text-gray-700 border-gray-200';
+			return 'bg-slate-100 text-slate-700 border-slate-200';
 	}
 }
 
@@ -33,22 +34,22 @@ function formatDate(value) {
 
 function CardView({ jobs, onEdit, onDelete }) {
 	return (
-		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{jobs.map(job => (
-				<div key={job._id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+				<div key={job._id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 					<div className="flex items-start justify-between gap-2">
 						<div>
-							<h3 className="text-base font-semibold text-gray-900">
+							<h3 className="font-poppins text-base font-semibold text-slate-900">
 								{job.jobInfo?.jobTitle || 'Untitled role'}
 							</h3>
-							<p className="text-sm text-gray-600">{job.jobInfo?.companyName || 'Unknown company'}</p>
+							<p className="font-roboto text-sm text-slate-600">{job.jobInfo?.companyName || 'Unknown company'}</p>
 						</div>
 						<span className={`px-2 py-1 text-xs rounded-md border ${statusBadgeColor(job.status)}`}>
 							{job.status}
 						</span>
 					</div>
 
-					<div className="mt-3 space-y-1 text-sm text-gray-700">
+					<div className="mt-3 space-y-1 font-roboto text-sm text-slate-700">
 						<p><span className="font-medium">Location:</span> {job.jobInfo?.location || '—'}</p>
 						<p><span className="font-medium">Employment:</span> {job.jobInfo?.employmentType || '—'}</p>
 						<p><span className="font-medium">Work setup:</span> {job.jobInfo?.workArrangement || '—'}</p>
@@ -61,14 +62,14 @@ function CardView({ jobs, onEdit, onDelete }) {
 								href={job.jobInfo?.applicationLink}
 								target="_blank"
 								rel="noreferrer"
-								className="text-xs text-blue-600 hover:underline"
+								className="text-xs text-slate-600 hover:underline"
 							>
 								View application
 							</a>
 						) : <span />}
 						<div className="flex items-center gap-2">
-							<button onClick={() => onEdit(job)} className="text-xs px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50">Edit</button>
-							<button onClick={() => onDelete(job)} className="text-xs px-3 py-1 rounded-md border border-rose-300 text-rose-700 hover:bg-rose-50">Delete</button>
+							<button onClick={() => onEdit(job)} className="text-xs rounded-md border border-slate-300 px-3 py-1 text-slate-700 hover:bg-slate-50">Edit</button>
+							<button onClick={() => onDelete(job)} className="text-xs rounded-md border border-rose-300 px-3 py-1 text-rose-700 hover:bg-rose-50">Delete</button>
 						</div>
 					</div>
 				</div>
@@ -79,32 +80,32 @@ function CardView({ jobs, onEdit, onDelete }) {
 
 function TableView({ jobs, onEdit, onDelete }) {
 	return (
-		<div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+		<div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
 			<table className="min-w-full text-sm">
-				<thead className="bg-gray-50 text-left text-gray-700">
+				<thead className="bg-slate-50 text-left text-slate-700">
 					<tr>
-						<th className="px-4 py-3 font-semibold">Role</th>
-						<th className="px-4 py-3 font-semibold">Company</th>
-						<th className="px-4 py-3 font-semibold">Status</th>
-						<th className="px-4 py-3 font-semibold">Interview</th>
-						<th className="px-4 py-3 font-semibold">Location</th>
-						<th className="px-4 py-3 font-semibold">Actions</th>
+						<th className="px-4 py-3 font-poppins font-semibold">Role</th>
+						<th className="px-4 py-3 font-poppins font-semibold">Company</th>
+						<th className="px-4 py-3 font-poppins font-semibold">Status</th>
+						<th className="px-4 py-3 font-poppins font-semibold">Interview</th>
+						<th className="px-4 py-3 font-poppins font-semibold">Location</th>
+						<th className="px-4 py-3 font-poppins font-semibold">Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					{jobs.map(job => (
-						<tr key={job._id} className="border-t border-gray-100">
-							<td className="px-4 py-3">{job.jobInfo?.jobTitle || 'Untitled role'}</td>
-							<td className="px-4 py-3">{job.jobInfo?.companyName || 'Unknown'}</td>
+						<tr key={job._id} className="border-t border-slate-100">
+							<td className="px-4 py-3 font-roboto text-slate-800">{job.jobInfo?.jobTitle || 'Untitled role'}</td>
+							<td className="px-4 py-3 font-roboto text-slate-700">{job.jobInfo?.companyName || 'Unknown'}</td>
 							<td className="px-4 py-3">
 								<span className={`px-2 py-1 text-xs rounded-md border ${statusBadgeColor(job.status)}`}>{job.status}</span>
 							</td>
-							<td className="px-4 py-3">{formatDate(job.interviewDate)}</td>
-							<td className="px-4 py-3">{job.jobInfo?.location || '—'}</td>
+							<td className="px-4 py-3 font-roboto text-slate-700">{formatDate(job.interviewDate)}</td>
+							<td className="px-4 py-3 font-roboto text-slate-700">{job.jobInfo?.location || '—'}</td>
 							<td className="px-4 py-3">
 								<div className="flex items-center gap-2">
-									<button onClick={() => onEdit(job)} className="text-xs px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50">Edit</button>
-									<button onClick={() => onDelete(job)} className="text-xs px-3 py-1 rounded-md border border-rose-300 text-rose-700 hover:bg-rose-50">Delete</button>
+									<button onClick={() => onEdit(job)} className="text-xs rounded-md border border-slate-300 px-3 py-1 text-slate-700 hover:bg-slate-50">Edit</button>
+									<button onClick={() => onDelete(job)} className="text-xs rounded-md border border-rose-300 px-3 py-1 text-rose-700 hover:bg-rose-50">Delete</button>
 								</div>
 							</td>
 						</tr>
@@ -178,26 +179,26 @@ function AddEditJobModal({ open, initialJob, onClose, onSubmit }) {
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
 			<div className="w-full max-w-2xl rounded-lg bg-white shadow-lg">
-				<div className="flex items-center justify-between border-b border-gray-200 p-4">
-					<h2 className="text-base font-semibold text-gray-900">{initialJob ? 'Edit job' : 'Add job'}</h2>
-					<button onClick={onClose} className="rounded-md px-2 py-1 text-sm hover:bg-gray-100">✕</button>
+				<div className="flex items-center justify-between border-b border-slate-200 p-4">
+					<h2 className="font-poppins text-base font-semibold text-slate-900">{initialJob ? 'Edit job' : 'Add job'}</h2>
+					<button onClick={onClose} className="rounded-md px-2 py-1 text-sm text-slate-700 hover:bg-slate-100">✕</button>
 				</div>
 				<form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Job title</label>
-						<input name="jobTitle" required value={formValues.jobTitle} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+						<label className="block text-xs font-medium text-slate-700">Job title</label>
+						<input name="jobTitle" required value={formValues.jobTitle} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey" />
 					</div>
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Company</label>
-						<input name="companyName" required value={formValues.companyName} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+						<label className="block text-xs font-medium text-slate-700">Company</label>
+						<input name="companyName" required value={formValues.companyName} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey" />
 					</div>
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Location</label>
-						<input name="location" value={formValues.location} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+						<label className="block text-xs font-medium text-slate-700">Location</label>
+						<input name="location" value={formValues.location} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey" />
 					</div>
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Work arrangement</label>
-						<select name="workArrangement" value={formValues.workArrangement} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+						<label className="block text-xs font-medium text-slate-700">Work arrangement</label>
+						<select name="workArrangement" value={formValues.workArrangement} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey">
 							<option value="">Select</option>
 							<option value="onSite">On-site</option>
 							<option value="hybrid">Hybrid</option>
@@ -206,8 +207,8 @@ function AddEditJobModal({ open, initialJob, onClose, onSubmit }) {
 						</select>
 					</div>
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Employment type</label>
-						<select name="employmentType" value={formValues.employmentType} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+						<label className="block text-xs font-medium text-slate-700">Employment type</label>
+						<select name="employmentType" value={formValues.employmentType} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey">
 							<option value="">Select</option>
 							<option value="partTime">Part-time</option>
 							<option value="fullTime">Full-time</option>
@@ -217,16 +218,16 @@ function AddEditJobModal({ open, initialJob, onClose, onSubmit }) {
 						</select>
 					</div>
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Application link</label>
-						<input name="applicationLink" value={formValues.applicationLink} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+						<label className="block text-xs font-medium text-slate-700">Application link</label>
+						<input name="applicationLink" value={formValues.applicationLink} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey" />
 					</div>
 					<div className="col-span-2">
-						<label className="block text-xs font-medium text-gray-700">Short description</label>
-						<textarea name="shortDescription" rows={3} value={formValues.shortDescription} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+						<label className="block text-xs font-medium text-slate-700">Short description</label>
+						<textarea name="shortDescription" rows={3} value={formValues.shortDescription} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey" />
 					</div>
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Status</label>
-						<select name="status" value={formValues.status} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+						<label className="block text-xs font-medium text-slate-700">Status</label>
+						<select name="status" value={formValues.status} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey">
 							<option value="applied">Applied</option>
 							<option value="readyForInterview">Ready for interview</option>
 							<option value="hired">Hired</option>
@@ -234,12 +235,12 @@ function AddEditJobModal({ open, initialJob, onClose, onSubmit }) {
 						</select>
 					</div>
 					<div className="col-span-1">
-						<label className="block text-xs font-medium text-gray-700">Interview date</label>
-						<input name="interviewDate" type="date" value={formValues.interviewDate} onChange={handleChange} className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+						<label className="block text-xs font-medium text-slate-700">Interview date</label>
+						<input name="interviewDate" type="date" value={formValues.interviewDate} onChange={handleChange} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey" />
 					</div>
 					<div className="col-span-2 flex items-center justify-end gap-2 pt-2">
-						<button type="button" onClick={onClose} className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50">Cancel</button>
-						<button type="submit" className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">{initialJob ? 'Save changes' : 'Add job'}</button>
+						<button type="button" onClick={onClose} className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Cancel</button>
+						<button type="submit" className="rounded-md bg-brand-honey px-4 py-2 text-sm font-medium text-brand-bee hover:bg-brand-honey-600">{initialJob ? 'Save changes' : 'Add job'}</button>
 					</div>
 				</form>
 			</div>
@@ -339,87 +340,93 @@ export default function MyJobsPage() {
 	}, [jobs]);
 
 	return (
-		<div className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
-			<div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
-				<h1 className="text-xl font-bold text-gray-900">My Jobs</h1>
-				<div className="flex items-center gap-2">
-					<div className="inline-flex rounded-md border border-gray-200 p-1">
-						<button
-							onClick={() => setView('table')}
-							className={`px-3 py-1.5 text-sm rounded-md ${view === 'table' ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+		<div className="min-h-screen bg-white">
+			<Navbar />
+			<div className="mx-auto w-full max-w-6xl p-4 font-roboto md:p-6 lg:p-8">
+				<div className="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-center md:justify-between">
+					<div>
+						<h1 className="font-poppins text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">My Jobs</h1>
+						<p className="mt-1 text-sm text-slate-600">Track applications, update statuses, and add walk-in or external applications.</p>
+					</div>
+					<div className="flex items-center gap-2">
+						<div className="inline-flex rounded-md border border-slate-200 p-1">
+							<button
+								onClick={() => setView('table')}
+								className={`rounded-md px-3 py-1.5 text-sm ${view === 'table' ? 'bg-brand-honey text-brand-bee' : 'text-slate-700 hover:bg-slate-50'}`}
+							>
+								Table
+							</button>
+							<button
+								onClick={() => setView('card')}
+								className={`rounded-md px-3 py-1.5 text-sm ${view === 'card' ? 'bg-brand-honey text-brand-bee' : 'text-slate-700 hover:bg-slate-50'}`}
+							>
+								Cards
+							</button>
+						</div>
+						<button onClick={openAddModal} className="rounded-lg bg-brand-honey px-4 py-2 text-sm font-medium text-brand-bee transition-colors hover:bg-brand-honey-600">Add job</button>
+					</div>
+				</div>
+
+				<div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+					<div className="col-span-2">
+						<div className="relative">
+							<input
+								type="text"
+								placeholder="Search by role or company..."
+								value={searchText}
+								onChange={e => setSearchText(e.target.value)}
+								className="w-full rounded-md border border-slate-300 px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey"
+							/>
+							<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">⌕</span>
+						</div>
+					</div>
+					<div className="col-span-1">
+						<select
+							value={statusFilter}
+							onChange={e => setStatusFilter(e.target.value)}
+							className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-honey"
 						>
-							Table
-						</button>
-						<button
-							onClick={() => setView('card')}
-							className={`px-3 py-1.5 text-sm rounded-md ${view === 'card' ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-						>
-							Cards
-						</button>
+							{STATUS_OPTIONS.map(opt => (
+								<option key={opt.value} value={opt.value}>
+									{opt.label}{opt.value !== 'all' ? ` (${countsByStatus[opt.value] || 0})` : ''}
+								</option>
+							))}
+						</select>
 					</div>
-					<button onClick={openAddModal} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Add job</button>
 				</div>
+
+				{isLoading && (
+					<div className="rounded-md border border-slate-200 bg-white p-6 text-center text-sm text-slate-600">Loading your jobs...</div>
+				)}
+				{!isLoading && errorMessage && (
+					<div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800">{errorMessage}</div>
+				)}
+				{!isLoading && !errorMessage && filteredJobs.length === 0 && (
+					<div className="rounded-md border border-slate-200 bg-white p-8 text-center">
+						<p className="text-sm text-slate-700">No jobs found. Try adjusting your search or add a job you applied to.</p>
+						<div className="mt-4">
+							<button onClick={openAddModal} className="rounded-lg bg-brand-honey px-4 py-2 text-sm font-medium text-brand-bee transition-colors hover:bg-brand-honey-600">Add job</button>
+						</div>
+					</div>
+				)}
+
+				{!isLoading && !errorMessage && filteredJobs.length > 0 && (
+					<div className="mt-2">
+						{view === 'table' ? (
+							<TableView jobs={filteredJobs} onEdit={openEditModal} onDelete={handleDelete} />
+						) : (
+							<CardView jobs={filteredJobs} onEdit={openEditModal} onDelete={handleDelete} />
+						)}
+					</div>
+				)}
+
+				<AddEditJobModal
+					open={isModalOpen}
+					initialJob={jobBeingEdited}
+					onClose={() => { setIsModalOpen(false); setJobBeingEdited(null) }}
+					onSubmit={handleSubmit}
+				/>
 			</div>
-
-			<div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-				<div className="col-span-2">
-					<div className="relative">
-						<input
-							type="text"
-							placeholder="Search by role or company..."
-							value={searchText}
-							onChange={e => setSearchText(e.target.value)}
-							className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-						/>
-						<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">⌕</span>
-					</div>
-				</div>
-				<div className="col-span-1">
-					<select
-						value={statusFilter}
-						onChange={e => setStatusFilter(e.target.value)}
-						className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-					>
-						{STATUS_OPTIONS.map(opt => (
-							<option key={opt.value} value={opt.value}>
-								{opt.label}{opt.value !== 'all' ? ` (${countsByStatus[opt.value] || 0})` : ''}
-							</option>
-						))}
-					</select>
-				</div>
-			</div>
-
-			{isLoading && (
-				<div className="rounded-md border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">Loading your jobs...</div>
-			)}
-			{!isLoading && errorMessage && (
-				<div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800">{errorMessage}</div>
-			)}
-			{!isLoading && !errorMessage && filteredJobs.length === 0 && (
-				<div className="rounded-md border border-gray-200 bg-white p-8 text-center">
-					<p className="text-sm text-gray-700">No jobs found. Try adjusting your search or add a job you applied to.</p>
-					<div className="mt-4">
-						<button onClick={openAddModal} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Add job</button>
-					</div>
-				</div>
-			)}
-
-			{!isLoading && !errorMessage && filteredJobs.length > 0 && (
-				<div className="mt-2">
-					{view === 'table' ? (
-						<TableView jobs={filteredJobs} onEdit={openEditModal} onDelete={handleDelete} />
-					) : (
-						<CardView jobs={filteredJobs} onEdit={openEditModal} onDelete={handleDelete} />
-					)}
-				</div>
-			)}
-
-			<AddEditJobModal
-				open={isModalOpen}
-				initialJob={jobBeingEdited}
-				onClose={() => { setIsModalOpen(false); setJobBeingEdited(null) }}
-				onSubmit={handleSubmit}
-			/>
 		</div>
 	);
 }
