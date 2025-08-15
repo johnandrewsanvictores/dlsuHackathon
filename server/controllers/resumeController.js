@@ -188,11 +188,16 @@ export const filterListingByResume = async (req, res) => {
 
             const finalScore = resumeSkills.length > 0 ? (score / (resumeSkills.length * 2)) * 100 : 0;
             
-            return finalScore > 10 ? { 
-                ...job, 
-                matchScore: Math.min(100, finalScore), 
-                matchedSkills: [...new Set(matchedSkills)] // Remove duplicates
-            } : null;
+            if (finalScore > 10) {
+                // Ensure we return a clean object without Mongoose metadata
+                const cleanJob = job.toObject ? job.toObject() : { ...job };
+                return {
+                    ...cleanJob,
+                    matchScore: Math.min(100, finalScore), 
+                    matchedSkills: [...new Set(matchedSkills)] // Remove duplicates
+                };
+            }
+            return null;
         };
         // Debug logging
         console.log('Resume skills found:', resumeSkills);

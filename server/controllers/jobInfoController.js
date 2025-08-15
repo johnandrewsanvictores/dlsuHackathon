@@ -207,7 +207,8 @@ export const getJobs = async (query) => {
         const filters = query;
         const jobInfos = await jobsInfo.find(filters).sort({ [sort]: order === 'asc' ? 1 : -1 })
             .skip(skip)
-            .limit(limit);;
+            .limit(limit)
+            .lean();
 
             return {success: true, jobInfos};
     } catch (err) {
