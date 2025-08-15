@@ -114,24 +114,17 @@ export const getResumeContext = async (req, res) => {
     }
 }
 
-
 export const filterListingByResume = async (req, res) => {
     try {
-
         const data = await getJobs({});
-        console.log(data);
-
-        if(data.success == false) {
+        if (data.success === false) {
             return res.status(500).json({ error: 'Failed to parse PDF' });
         }
 
-        var jobs = data.jobInfos;
+        const jobs = data.jobInfos;
 
-        const resumeContext = await User.findOne({
-            _id: req.user.userId
-        }).select('resumeContext -_id');
-
-        if(!resumeContext) {
+        const resumeContext = await User.findOne({ _id: req.user.userId }).select('resumeContext -_id');
+        if (!resumeContext) {
             return res.status(400).json({ error: 'Resume not found' });
         }
 
@@ -147,33 +140,35 @@ export const filterListingByResume = async (req, res) => {
             });
         }
 
+        // Preprocess resume skills and job descriptions once
+        const resumeSkillsSet = new Set(resumeSkills.map(skill => skill.toLowerCase()));
+
         // Preprocess text helper
         const preprocessText = (text) => text.toLowerCase().replace(/[^\w\s]/gi, '');
 
-        // Fuse.js instance
-        const fuse = new Fuse(resumeSkills, {
-            includeScore: true,
-            threshold: 0.5 // adjust fuzziness
-        });
-
         // Function to match one job
         const matchJobSkills = (job) => {
-            const jobText = `${job.jobTitle || ''} ${job.shortDescription || ''} ${job.companyName || ''}`.toLowerCase();
+            const jobText = preprocessText(`${job.jobTitle || ''} ${job.shortDescription || ''} ${job.companyName || ''}`);
             
             let matchedSkills = [];
             let score = 0;
 
-            // Check each skill against the job text
+            // Check direct matches first
             resumeSkills.forEach(skill => {
                 const skillLower = skill.toLowerCase();
                 if (jobText.includes(skillLower)) {
                     matchedSkills.push(skill);
                     score += 2; // Direct match gets higher score
-                } else {
-                    // Use fuzzy matching for partial matches
+                }
+            });
+
+            // Perform fuzzy matching if no direct match found
+            resumeSkills.forEach(skill => {
+                const skillLower = skill.toLowerCase();
+                if (!matchedSkills.includes(skill)) {
                     const words = jobText.split(/\s+/);
                     const skillWords = skillLower.split(/\s+/);
-                    
+
                     for (const word of words) {
                         for (const skillWord of skillWords) {
                             if (skillWord.length > 2 && word.includes(skillWord)) {
@@ -199,12 +194,13 @@ export const filterListingByResume = async (req, res) => {
             }
             return null;
         };
-        // Debug logging
+
         console.log('Resume skills found:', resumeSkills);
         console.log('Total jobs to process:', jobs.length);
 
-        // Process all jobs
-        const results = jobs.map(matchJobSkills);
+        // Use Promise.all to parallelize job processing
+        const results = await Promise.all(jobs.map(job => matchJobSkills(job)));
+
         const filteredJobs = results
             .filter(r => r !== null)
             .sort((a, b) => b.matchScore - a.matchScore); // highest match first
@@ -218,7 +214,7 @@ export const filterListingByResume = async (req, res) => {
             matchedJobsCount: filteredJobs.length,
             message: filteredJobs.length > 0 ? 'Jobs matched successfully' : 'No matching jobs found'
         });
-    }catch (err) {
-        res.status(500).json({ error: 'Server error' + err});
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' + err });
     }
-}
+};
