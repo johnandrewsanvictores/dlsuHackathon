@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const myJobsSchema = new mongoose.Schema({
+const jobsInfoSchema = new mongoose.Schema({
   jobTitle: { type: String, required: true },
   companyName: { type: String, required: true },
   location: { type: String },
@@ -24,6 +24,6 @@ const myJobsSchema = new mongoose.Schema({
   experienceLevel: { type: String },
 });
 
-const MyJob = mongoose.model('MyJob', myJobsSchema);
+const jobsInfo = mongoose.model('MyJob', jobsInfoSchema);
 
-export default MyJob;
+export default jobsInfo;

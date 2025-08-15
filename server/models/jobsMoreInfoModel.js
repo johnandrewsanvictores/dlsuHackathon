@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 import {Timestamp} from "mongodb";
 
-const userSchema = new mongoose.Schema({
-    jobInfold: { type: Object},
+const jobsMoreInfoSchema = new mongoose.Schema({
+    jobInfold: { type: mongoose.Schema.Types.ObjectId},
     sourceSite: { type: String},
     originalJobId: { type: String},
     sourceUrl: { type: String}
 });
 
-const User = mongoose.model('User', userSchema);
+const jobsMoreInfo = mongoose.model('User', jobsMoreInfoSchema);
 
-export default User;
+export default jobsMoreInfo;
