@@ -199,7 +199,7 @@ async function calculateJobMatchScore(job, resumeSkills) {
 export const getJobs = async (query) => {
     try {
         const page = query.page || 1;
-        const limit = query.limit || 10;
+        const limit = query.limit || 100;
         const skip = (page -1) * limit;
 
         const {sort = 'createdAt', order = 'desc'} = query;

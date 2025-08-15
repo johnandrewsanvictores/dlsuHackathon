@@ -3,11 +3,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import User from "../models/userModel.js";
-import axios from "../config/axios.js";
+import axios from "axios";
 import {getJobs} from "./jobInfoController.js";
 import Fuse from 'fuse.js';
 
 async function getSkills(parsedText) {
+    try {
     const prompt = `
     This is parsed raw text from a resume PDF using pdfjs-dist. The content is jumbled and lacks structure. Please analyze the text and extract only the skills, prioritizing technical/hard skills from a dedicated skills section if available, and if no skills section exists, infer technical skills from other parts of the resume such as summary, experience, projects, or objectives; if no technical skills can be identified anywhere, extract soft skills instead. Send the output in valid JSON format like {"hardSkills":"skill1, skill2, skill3",and soft skills if any {"softSkills":"skill1, skill2, skill3"}, including only the skill names separated by commas, and leave the value empty if no matching skills are found. This is the raw text: ${parsedText}
     `
@@ -15,9 +16,66 @@ async function getSkills(parsedText) {
     const encodedPrompt = encodeURIComponent(prompt);
     const pollinationsURL = `https://text.pollinations.ai/${encodedPrompt}`;
 
-    const pollRes = await axios.get(pollinationsURL);
+        const pollRes = await axios.get(pollinationsURL);
+        
+        // Handle different response types
+        let responseText = '';
+        if (typeof pollRes.data === 'string') {
+            responseText = pollRes.data;
+        } else if (pollRes.data && typeof pollRes.data === 'object') {
+            // If it's already an object with the skills, use it directly
+            if (pollRes.data.hardSkills || pollRes.data.softSkills) {
+                return { data: pollRes.data };
+            }
+            responseText = JSON.stringify(pollRes.data);
+        } else {
+            responseText = String(pollRes.data);
+        }
+        
+        // Try to extract JSON from the response
+        let skillsData = { hardSkills: "" };
+        
+        try {
+            // Look for JSON pattern in response
+            const jsonMatch = responseText.match(/\{[^}]*"hardSkills"[^}]*\}/);
+            if (jsonMatch) {
+                skillsData = JSON.parse(jsonMatch[0]);
+            } else {
+                // Try to parse the entire response as JSON
+                try {
+                    const parsed = JSON.parse(responseText);
+                    if (parsed.hardSkills) {
+                        skillsData = parsed;
+                    }
+                } catch (e) {
+                    // Fallback: extract skills manually from common patterns
+                    const skillPatterns = [
+                        /(?:javascript|js|react|node|python|java|c\+\+|html|css|sql|mongodb|express|angular|vue|php|mysql|unity|asp\.net)/gi
+                    ];
+                    
+                    const foundSkills = [];
+                    skillPatterns.forEach(pattern => {
+                        const matches = responseText.match(pattern);
+                        if (matches) {
+                            foundSkills.push(...matches.map(s => s.toLowerCase()));
+                        }
+                    });
+                    
+                    if (foundSkills.length > 0) {
+                        skillsData.hardSkills = [...new Set(foundSkills)].join(', ');
+                    }
+                }
+            }
+        } catch (parseError) {
+            console.log('JSON parsing failed, using fallback:', parseError);
+            console.log('Response was:', responseText);
+        }
 
-    return pollRes;
+        return { data: skillsData };
+    } catch (error) {
+        console.error('Error getting skills:', error);
+        return { data: { hardSkills: "" } };
+    }
 }
 
 export const getResumeContext = async (req, res) => {
@@ -60,7 +118,8 @@ export const getResumeContext = async (req, res) => {
 export const filterListingByResume = async (req, res) => {
     try {
 
-        const data = await getJobs({limit: 100});
+        const data = await getJobs({});
+        console.log(data);
 
         if(data.success == false) {
             return res.status(500).json({ error: 'Failed to parse PDF' });
@@ -76,9 +135,17 @@ export const filterListingByResume = async (req, res) => {
             return res.status(400).json({ error: 'Resume not found' });
         }
 
-        const resumeSkillsData = await getSkills(resumeContext);
+        const resumeSkillsData = await getSkills(resumeContext.resumeContext);
         const resumeSkillsString = resumeSkillsData.data?.hardSkills || '';
-        const resumeSkills = resumeSkillsString.split(',').map(skill => skill.trim());
+        const resumeSkills = resumeSkillsString.split(',').map(skill => skill.trim()).filter(Boolean);
+
+        if (resumeSkills.length === 0) {
+            return res.status(200).json({ 
+                filteredJobs: [],
+                message: 'No skills found in resume. Please upload a more detailed resume or manually search for jobs.',
+                resumeSkills: []
+            });
+        }
 
         // Preprocess text helper
         const preprocessText = (text) => text.toLowerCase().replace(/[^\w\s]/gi, '');
@@ -90,33 +157,62 @@ export const filterListingByResume = async (req, res) => {
         });
 
         // Function to match one job
-        const matchJobSkills = async (job) => {
-            const jobText = preprocessText(job.shortDescription);
+        const matchJobSkills = (job) => {
+            const jobText = `${job.jobTitle || ''} ${job.shortDescription || ''} ${job.companyName || ''}`.toLowerCase();
+            
+            let matchedSkills = [];
+            let score = 0;
 
-            const matchedSkills = resumeSkills.filter(skill =>
-                fuse.search(jobText).some(result => result.item === skill)
-            );
+            // Check each skill against the job text
+            resumeSkills.forEach(skill => {
+                const skillLower = skill.toLowerCase();
+                if (jobText.includes(skillLower)) {
+                    matchedSkills.push(skill);
+                    score += 2; // Direct match gets higher score
+                } else {
+                    // Use fuzzy matching for partial matches
+                    const words = jobText.split(/\s+/);
+                    const skillWords = skillLower.split(/\s+/);
+                    
+                    for (const word of words) {
+                        for (const skillWord of skillWords) {
+                            if (skillWord.length > 2 && word.includes(skillWord)) {
+                                matchedSkills.push(skill);
+                                score += 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
 
-            const score = (matchedSkills.length / resumeSkills.length) * 100;
-
-            return score > 0 ? { job, score, matchedSkills } : null;
+            const finalScore = resumeSkills.length > 0 ? (score / (resumeSkills.length * 2)) * 100 : 0;
+            
+            return finalScore > 10 ? { 
+                ...job, 
+                matchScore: Math.min(100, finalScore), 
+                matchedSkills: [...new Set(matchedSkills)] // Remove duplicates
+            } : null;
         };
+        // Debug logging
+        console.log('Resume skills found:', resumeSkills);
+        console.log('Total jobs to process:', jobs.length);
 
-        jobs = [
-            {
-                shortDescription: "This is reactjs"
-            },
-            {
-                shortDescription: "This is node js"
-            }
-        ]
-        // Process all jobs in parallel
-        const results = await Promise.all(jobs.map(matchJobSkills));
+        // Process all jobs
+        const results = jobs.map(matchJobSkills);
         const filteredJobs = results
             .filter(r => r !== null)
-            .sort((a, b) => b.score - a.score); // highest match first
+            .sort((a, b) => b.matchScore - a.matchScore); // highest match first
 
-        return res.status(200).json({ filteredJobs });
+        console.log('Filtered jobs count:', filteredJobs.length);
+
+        return res.status(200).json({ 
+            filteredJobs,
+            resumeSkills,
+            totalJobsProcessed: jobs.length,
+            matchedJobsCount: filteredJobs.length,
+            message: filteredJobs.length > 0 ? 'Jobs matched successfully' : 'No matching jobs found'
+        });
     }catch (err) {
         res.status(500).json({ error: 'Server error' + err});
     }

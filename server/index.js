@@ -16,7 +16,7 @@ import connectDbB from './config/db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import {scrapeOnlineJobs} from "./scraper-onlinejobs.js";
+//import {scrapeOnlineJobs} from "./scraper-onlinejobs.js";
 import jobsInfo from "./models/jobsInfoModel.js";
 import jobInfoRoute from "./routes/jobInfoRoute.js";
 
