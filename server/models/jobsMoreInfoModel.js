@@ -8,6 +8,6 @@ const jobsMoreInfoSchema = new mongoose.Schema({
     sourceUrl: { type: String}
 });
 
-const jobsMoreInfo = mongoose.model('User', jobsMoreInfoSchema);
+const jobsMoreInfo = mongoose.model('jobsMoreInfo', jobsMoreInfoSchema);
 
 export default jobsMoreInfo;

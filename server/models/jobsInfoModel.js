@@ -24,6 +24,6 @@ const jobsInfoSchema = new mongoose.Schema({
   experienceLevel: { type: String },
 });
 
-const jobsInfo = mongoose.model('MyJob', jobsInfoSchema);
+const jobsInfo = mongoose.model('jobsInfo', jobsInfoSchema);
 
 export default jobsInfo;
