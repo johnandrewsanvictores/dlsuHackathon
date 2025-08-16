@@ -30,18 +30,18 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
       };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      aria-modal="true"
-      role="dialog"
-    >
+         <div
+       className="fixed inset-0 z-50 flex items-center justify-center p-4"
+       aria-modal="true"
+       role="dialog"
+     >
       <div
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
+             <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
         <div className="relative mb-6">
           <button
             onClick={onClose}
@@ -185,17 +185,6 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
                 />
               </div>
-              <div>
-                <label className="mb-1 block font-roboto text-sm text-brand-bee">
-                  Confirm password<span className="text-brand-honey"> *</span>
-                </label>
-                <input
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Re-type your password"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
-                />
-              </div>
             </div>
           )}
           <div>
@@ -210,25 +199,31 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
             />
           </div>
 
-          <div>
-            <label className="mb-1 block font-roboto text-sm text-brand-bee">
-              Password<span className="text-brand-honey"> *</span>
-            </label>
-            <input
-              name="password"
-              type="password"
-              placeholder="Type your password"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
-            />
-            <div className="mt-2 text-right">
-              <a
-                href="#forgot"
-                className="font-roboto text-xs text-slate-500 hover:text-brand-bee"
-              >
-                Forgot Password?
-              </a>
-            </div>
-          </div>
+                     <div>
+             <label className="mb-1 block font-roboto text-sm text-brand-bee">
+               Password<span className="text-brand-honey"> *</span>
+             </label>
+             <input
+               name="password"
+               type="password"
+               placeholder="Type your password"
+               className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+             />
+           </div>
+
+                     {!isSignin && (
+             <div>
+               <label className="mb-1 block font-roboto text-sm text-brand-bee">
+                 Confirm password<span className="text-brand-honey"> *</span>
+               </label>
+               <input
+                 name="confirmPassword"
+                 type="password"
+                 placeholder="Re-type your password"
+                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+               />
+             </div>
+           )}
 
           <button
             type="submit"
