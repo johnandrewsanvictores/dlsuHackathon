@@ -218,14 +218,16 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
               placeholder="Type your password"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
             />
-            <div className="mt-2 text-right">
-              <a
-                href="#forgot"
-                className="font-roboto text-xs text-slate-500 hover:text-brand-bee"
-              >
-                Forgot Password?
-              </a>
-            </div>
+            {isSignin && (
+              <div className="mt-2 text-right">
+                <a
+                  href="#forgot"
+                  className="font-roboto text-xs text-slate-500 hover:text-brand-bee"
+                >
+                  Forgot Password?
+                </a>
+              </div>
+            )}
           </div>
 
           <button
