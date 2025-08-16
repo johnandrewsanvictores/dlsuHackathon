@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "/axios.js";
 import { useAuth } from "../../context/AuthContext.jsx";
-
+import logo from "../../assets/WorkHiveLogo.png";
 const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -31,7 +31,7 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center"
       aria-modal="true"
       role="dialog"
     >
@@ -41,7 +41,7 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
         <div className="relative mb-6">
           <button
             onClick={onClose}
@@ -60,23 +60,11 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
             </svg>
           </button>
 
-          <div className="flex items-center justify-center gap-3">
-            <div className="rounded-lg bg-brand-honey p-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                strokeWidth="2"
-                stroke="white"
-                className="h-5 w-5"
-              >
-                <path d="M6 7h12a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z" />
-                <path d="M9 7V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v1" />
-              </svg>
-            </div>
-            <span className="font-poppins text-2xl font-bold text-brand-bee">
+          <div className="flex items-center justify-center">
+            <img src={logo} alt="WorkHive logo" className="h-10 w-auto" />
+            <h2 className="font-poppins text-2xl font-extrabold leading-tight text-brand-bee ml-2">
               Work <span className="text-brand-honey">Hive</span>
-            </span>
+            </h2>
           </div>
         </div>
 
@@ -104,10 +92,6 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                 const loggedInUser = data?.user;
                 if (loggedInUser) {
                   setUser(loggedInUser);
-                  localStorage.setItem(
-                    "authUser",
-                    JSON.stringify(loggedInUser)
-                  );
                   // Clear form
                   form.reset();
                   onClose?.();
@@ -138,7 +122,6 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                 const createdUser = res.data?.user;
                 if (createdUser) {
                   setUser(createdUser);
-                  localStorage.setItem("authUser", JSON.stringify(createdUser));
                   form.reset();
                   onClose?.();
                   navigate("/onboarding");
@@ -212,6 +195,16 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
               placeholder="Type your password"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
             />
+            {isSignin && (
+              <div className="mt-2 text-right">
+                <a
+                  href="#forgot"
+                  className="font-roboto text-xs text-slate-500 hover:text-brand-bee"
+                >
+                  Forgot Password?
+                </a>
+              </div>
+            )}
           </div>
 
           {!isSignin && (
