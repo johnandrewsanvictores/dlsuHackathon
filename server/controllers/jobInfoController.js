@@ -265,6 +265,8 @@ export const fetchAdzunaJobs = async (req, res) => {
             where = 'london' 
         } = req.body;
 
+        
+
         console.log(`Starting Adzuna job fetch: ${startPage}-${endPage}, ${what}, ${where}`);
 
         const adzunaClient = new AdzunaClient();
