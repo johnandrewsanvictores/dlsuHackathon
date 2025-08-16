@@ -3,29 +3,54 @@ import { useNavigate } from "react-router-dom";
 import AuthModal from "../modals/AuthModals";
 import api from "/axios.js";
 import logo from "../../assets/WorkHiveLogo.png";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const Navbar = () => {
   const [authMode, setAuthMode] = useState(null);
-  const [user, setUser] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
+  const { user, setUser } = useAuth();
 
+  // Update localStorage when user state changes
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("authUser", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("authUser");
+    }
+  }, [user]);
+
+  // Initialize user state from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem("authUser");
-    if (stored) {
+    if (stored && !user) {
       try {
-        setUser(JSON.parse(stored));
+        const parsedUser = JSON.parse(stored);
+        setUser(parsedUser);
       } catch (_) {
-        setUser(null);
+        localStorage.removeItem("authUser");
       }
     }
-    const onStorage = () => {
-      const s = localStorage.getItem("authUser");
-      setUser(s ? JSON.parse(s) : null);
+    
+    // Listen for storage changes from other tabs/windows
+    const handleStorageChange = (e) => {
+      if (e.key === "authUser") {
+        if (e.newValue) {
+          try {
+            const parsedUser = JSON.parse(e.newValue);
+            setUser(parsedUser);
+          } catch (_) {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      }
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -41,7 +66,6 @@ const Navbar = () => {
     try {
       await api.post("/auth/logout");
     } catch (_) {}
-    localStorage.removeItem("authUser");
     setUser(null);
     setOpenMenu(false);
     setShowLogoutConfirm(false);

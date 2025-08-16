@@ -104,6 +104,7 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                 const loggedInUser = data?.user;
                 if (loggedInUser) {
                   setUser(loggedInUser);
+                  localStorage.setItem("authUser", JSON.stringify(loggedInUser));
                   // Clear form
                   form.reset();
                   onClose?.();
@@ -134,6 +135,7 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                 const createdUser = res.data?.user;
                 if (createdUser) {
                   setUser(createdUser);
+                  localStorage.setItem("authUser", JSON.stringify(createdUser));
                   form.reset();
                   onClose?.();
                   navigate("/onboarding");
