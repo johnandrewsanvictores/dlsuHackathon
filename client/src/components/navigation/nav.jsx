@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import AuthModal from "../modals/AuthModals";
 import api from "/axios.js";
 import logo from "../../assets/WorkHiveLogo.png";
@@ -12,7 +12,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
 
-  // Update localStorage when user state changes
   useEffect(() => {
     if (user) {
       localStorage.setItem("authUser", JSON.stringify(user));
@@ -21,7 +20,6 @@ const Navbar = () => {
     }
   }, [user]);
 
-  // Initialize user state from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem("authUser");
     if (stored && !user) {
@@ -32,8 +30,7 @@ const Navbar = () => {
         localStorage.removeItem("authUser");
       }
     }
-    
-    // Listen for storage changes from other tabs/windows
+
     const handleStorageChange = (e) => {
       if (e.key === "authUser") {
         if (e.newValue) {
@@ -48,7 +45,7 @@ const Navbar = () => {
         }
       }
     };
-    
+
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
@@ -85,24 +82,42 @@ const Navbar = () => {
           </div>
 
           <div className="hidden items-center justify-center gap-8 md:flex">
-            <button
-              onClick={() => navigate("/")}
-              className="text-slate-700 transition-colors hover:text-slate-900"
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `transition-colors ${
+                  isActive
+                    ? "text-brand-honey font-semibold"
+                    : "text-slate-700 hover:text-slate-900"
+                }`
+              }
             >
               Homepage
-            </button>
-            <button
-              onClick={() => navigate("/about")}
-              className="text-slate-700 transition-colors hover:text-slate-900"
+            </NavLink>
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                `transition-colors ${
+                  isActive
+                    ? "text-brand-honey font-semibold"
+                    : "text-slate-700 hover:text-slate-900"
+                }`
+              }
             >
               About
-            </button>
-            <button
-              onClick={() => navigate("/billing")}
-              className="text-slate-700 transition-colors hover:text-slate-900"
+            </NavLink>
+            <NavLink
+              to="/billing"
+              className={({ isActive }) =>
+                `transition-colors ${
+                  isActive
+                    ? "text-brand-honey font-semibold"
+                    : "text-slate-700 hover:text-slate-900"
+                }`
+              }
             >
               Pricing
-            </button>
+            </NavLink>
           </div>
 
           <div className="flex items-center justify-end gap-3">
