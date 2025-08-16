@@ -31,7 +31,7 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       aria-modal="true"
       role="dialog"
     >
@@ -41,7 +41,7 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
         <div className="relative mb-6">
           <button
             onClick={onClose}
@@ -104,6 +104,10 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                 const loggedInUser = data?.user;
                 if (loggedInUser) {
                   setUser(loggedInUser);
+                  localStorage.setItem(
+                    "authUser",
+                    JSON.stringify(loggedInUser)
+                  );
                   // Clear form
                   form.reset();
                   onClose?.();
@@ -134,6 +138,7 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                 const createdUser = res.data?.user;
                 if (createdUser) {
                   setUser(createdUser);
+                  localStorage.setItem("authUser", JSON.stringify(createdUser));
                   form.reset();
                   onClose?.();
                   navigate("/onboarding");
@@ -183,17 +188,6 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
                 />
               </div>
-              <div>
-                <label className="mb-1 block font-roboto text-sm text-brand-bee">
-                  Confirm password<span className="text-brand-honey"> *</span>
-                </label>
-                <input
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Re-type your password"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
-                />
-              </div>
             </div>
           )}
           <div>
@@ -218,17 +212,21 @@ const AuthModal = ({ isOpen, mode, onClose, onSwitchMode }) => {
               placeholder="Type your password"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
             />
-            {isSignin && (
-              <div className="mt-2 text-right">
-                <a
-                  href="#forgot"
-                  className="font-roboto text-xs text-slate-500 hover:text-brand-bee"
-                >
-                  Forgot Password?
-                </a>
-              </div>
-            )}
           </div>
+
+          {!isSignin && (
+            <div>
+              <label className="mb-1 block font-roboto text-sm text-brand-bee">
+                Confirm password<span className="text-brand-honey"> *</span>
+              </label>
+              <input
+                name="confirmPassword"
+                type="password"
+                placeholder="Re-type your password"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-brand-bee placeholder:text-slate-400 focus:border-brand-honey focus:outline-none focus:ring-2 focus:ring-brand-honey/40"
+              />
+            </div>
+          )}
 
           <button
             type="submit"

@@ -2,6 +2,7 @@ import jobsInfo from "../models/jobsInfoModel.js";
 import jobsMoreInfo from "../models/jobsMoreInfoModel.js";
 import User from "../models/userModel.js";
 import UniversalJobScraper from "../services/universalJobScraper.js";
+import AdzunaClient from "../clients/adzunaClient.js";
 import Fuse from 'fuse.js';
 
 export const getJobInfo = async(req, res) => {
@@ -251,5 +252,143 @@ export const getJobs = async (query) => {
             return {success: true, jobInfos};
     } catch (err) {
         return {success: false, error: err };
+    }
+}
+
+// Fetch and store jobs from Adzuna API
+export const fetchAdzunaJobs = async (req, res) => {
+    try {
+        const { 
+            startPage = 1, 
+            endPage = 5, 
+            what = 'javascript developer', 
+            where = 'london' 
+        } = req.body;
+
+        console.log(`Starting Adzuna job fetch: ${startPage}-${endPage}, ${what}, ${where}`);
+
+        const adzunaClient = new AdzunaClient();
+        const result = await adzunaClient.fetchMultiplePages(startPage, endPage, what, where);
+
+        if (!result.success) {
+            return res.status(400).json({ 
+                error: 'Failed to fetch jobs from Adzuna',
+                details: result.data.errors 
+            });
+        }
+
+        const { jobs } = result.data;
+        const savedJobs = [];
+        const skippedJobs = [];
+
+        for (const job of jobs) {
+            try {
+                // Check if job already exists by checking the original Adzuna ID
+                const existingJobMoreInfo = await jobsMoreInfo.findOne({
+                    originalJobId: job.adzunaData.id
+                });
+
+                if (existingJobMoreInfo) {
+                    skippedJobs.push({
+                        title: job.jobTitle,
+                        reason: 'Job already exists in database'
+                    });
+                    continue;
+                }
+
+                // Create the main job record
+                const newJob = new jobsInfo({
+                    jobTitle: job.jobTitle,
+                    companyName: job.companyName,
+                    location: job.location,
+                    workArrangement: job.workArrangement,
+                    employmentType: job.employmentType,
+                    postedDate: job.postedDate,
+                    shortDescription: job.shortDescription,
+                    applicationLink: job.applicationLink,
+                    salaryRange: job.salaryRange,
+                    industry: job.industry,
+                    experienceLevel: job.experienceLevel
+                });
+
+                const savedJob = await newJob.save();
+
+                // Create the more info record
+                const jobMoreInfo = new jobsMoreInfo({
+                    jobInfold: savedJob._id,
+                    sourceSite: 'adzuna',
+                    originalJobId: job.adzunaData.id,
+                    sourceUrl: job.applicationLink
+                });
+
+                await jobMoreInfo.save();
+
+                savedJobs.push({
+                    id: savedJob._id,
+                    title: job.jobTitle,
+                    company: job.companyName
+                });
+
+            } catch (error) {
+                console.error('Error saving job:', error);
+                skippedJobs.push({
+                    title: job.jobTitle,
+                    reason: `Database error: ${error.message}`
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Successfully processed ${jobs.length} jobs from Adzuna`,
+            data: {
+                savedJobs: savedJobs.length,
+                skippedJobs: skippedJobs.length,
+                totalProcessed: jobs.length,
+                savedJobDetails: savedJobs,
+                skippedJobDetails: skippedJobs
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in fetchAdzunaJobs:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch and store Adzuna jobs',
+            details: error.message 
+        });
+    }
+}
+
+// Get jobs from Adzuna API without storing in database (for testing)
+export const getAdzunaJobs = async (req, res) => {
+    try {
+        const { 
+            page = 1, 
+            what = 'developer', 
+            where = 'london',
+            resultsPerPage = 20
+        } = req.query;
+
+        const adzunaClient = new AdzunaClient();
+        const result = await adzunaClient.fetchJobs(page, what, where, resultsPerPage);
+
+        if (!result.success) {
+            return res.status(400).json({ 
+                error: 'Failed to fetch jobs from Adzuna',
+                details: result.error 
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.data
+        });
+
+    } catch (error) {
+        console.error('Error in getAdzunaJobs:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch Adzuna jobs',
+            details: error.message 
+        });
     }
 }
